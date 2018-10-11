@@ -1,0 +1,34 @@
+/*
+** Created by doom on 10/10/18.
+*/
+
+#ifndef FOR_LIBCXX_UTILITY
+#define FOR_LIBCXX_UTILITY
+
+#include <type_traits>
+
+namespace std
+{
+    template <typename T>
+    T &&declval() noexcept;
+
+    template <typename T>
+    constexpr remove_reference_t<T> &&move(T &&t)
+    {
+        return static_cast<remove_reference_t<T> &&>(t);
+    }
+
+    template <typename T>
+    constexpr T &&forward(remove_reference_t<T> &t)
+    {
+        return static_cast<T &&>(t);
+    }
+
+    template <typename T>
+    constexpr T &&forward(remove_reference_t<T> &&t)
+    {
+        return static_cast<T &&>(t);
+    }
+}
+
+#endif /* !FOR_LIBCXX_UTILITY */
