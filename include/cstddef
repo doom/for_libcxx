@@ -1,0 +1,19 @@
+/*
+** Created by doom on 13/10/18.
+*/
+
+#ifndef FOR_LIBCXX_CSTDDEF
+#define FOR_LIBCXX_CSTDDEF
+
+#include <stddef.h>
+
+namespace std
+{
+    enum class byte : unsigned char
+    {
+    };
+
+    using ::size_t;
+}
+
+#endif /* !FOR_LIBCXX_CSTDDEF */

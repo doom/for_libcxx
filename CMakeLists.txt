@@ -9,6 +9,8 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -nostdlib -nostdinc -fno-builtin -fno-rtti -f
 add_subdirectory(lib/for_libc)
 
 set(LIBCXX_SOURCES
+        include/cstdint
+        include/cstddef
         include/type_traits
         include/utility
         src/dummy/dummy.cpp
@@ -27,5 +29,7 @@ add_executable(for_libcxx-tests
         tests/tests-type_traits.cpp
         tests/tests-utility.cpp
         )
+
+set_target_properties(for_libcxx-tests PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
 
 target_link_libraries(for_libcxx-tests for_libcxx-static ut)

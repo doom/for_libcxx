@@ -36,7 +36,7 @@ $(SHARED_LIB):		for_libc $(SHARED_OBJ)
 			$(CXX) -shared -o $(SHARED_LIB) $(SHARED_OBJ)
 
 $(TESTS):		$(STATIC_LIB) $(TESTS_LIB)
-			$(CXX) $(TESTS_SRC) $(CPPFLAGS) -Ilib/for_libc/lib/ut/include $(CXXFLAGS) -Itests/ -o $(TESTS) -Llib/for_libc -lut -lfor_libc-static
+			$(CXX) $(TESTS_SRC) $(CPPFLAGS) -Ilib/for_libc/lib/ut/include -Itests/ -o $(TESTS) -Llib/for_libc -lut -lfor_libc-static $(CXXFLAGS) -fexceptions
 
 tests:			$(TESTS)
 
