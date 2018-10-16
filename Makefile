@@ -14,7 +14,7 @@ STATIC_LIB		=	libfor_libcxx-static.a
 TESTS			=	for_libcxx-tests
 
 CPPFLAGS		=	-isystem include -isystem lib/for_libc/include -isystem lib/for_libc/include/x86_64
-CXXFLAGS		=	-Wall -Wextra -nostdinc -nostdlib -fno-builtin -fno-rtti -fno-exceptions -O3 -std=c++17
+CXXFLAGS		=	-Wall -Wextra -nostdinc -nostdlib -fno-builtin -fno-rtti -fno-exceptions -O3 -std=c++17 -DFOR_LIBCXX_NO_EXCEPTIONS
 
 build/shared/%.o:	src/%.cpp
 			@mkdir -p $(shell dirname $@)

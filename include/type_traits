@@ -299,6 +299,101 @@ namespace std
 
     namespace details
     {
+        template <typename, typename T, typename U>
+        struct is_assignable : false_type
+        {
+        };
+
+        template <typename T, typename U>
+        struct is_assignable<void_t<decltype(std::declval<T>() = std::declval<U>())>, T, U> : true_type
+        {
+        };
+
+        template <typename, typename T, typename U>
+        struct is_nothrow_assignable : false_type
+        {
+        };
+
+        template <typename T, typename U>
+        struct is_nothrow_assignable<void_t<decltype(std::declval<T>() = std::declval<U>())>, T, U>
+            : bool_constant<noexcept(std::declval<T &>() = std::declval<U>())>
+        {
+        };
+    }
+
+    template <typename T, typename U>
+    struct is_assignable : details::is_assignable<void, T, U>
+    {
+    };
+
+    template <typename T, typename U>
+    inline constexpr const bool is_assignable_v = is_assignable<T, U>::value;
+
+    template <typename T, typename U>
+    struct is_trivially_assignable : bool_constant<is_assignable<T, U>::value
+                                                   && __is_trivially_assignable(T, U)>
+    {
+    };
+
+    template <typename T, typename U>
+    inline constexpr const bool is_trivially_assignable_v = is_trivially_assignable<T, U>::value;
+
+    template <typename T, typename U>
+    struct is_nothrow_assignable : details::is_nothrow_assignable<void, T, U>
+    {
+    };
+
+    template <typename T, typename U>
+    inline constexpr const bool is_nothrow_assignable_v = is_nothrow_assignable<T, U>::value;
+
+
+    template <typename T>
+    struct is_move_assignable : is_assignable<T &, T &&>
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_move_assignable_v = is_assignable_v<T &, T &&>;
+
+    template <typename T>
+    struct is_trivially_move_assignable : is_trivially_assignable<T &, T &&>
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_trivially_move_assignable_v = is_trivially_assignable_v<T &, T &&>;
+
+    template <typename T>
+    struct is_nothrow_move_assignable : is_nothrow_assignable<T &, T &&>
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_nothrow_move_assignable_v = is_nothrow_assignable_v<T &, T &&>;
+
+    template <typename T>
+    struct is_copy_assignable : is_assignable<T &, const T &>
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_copy_assignable_v = is_assignable_v<T &, const T &>;
+
+    template <typename T>
+    struct is_trivially_copy_assignable : is_trivially_assignable<T &, const T &>
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_trivially_copy_assignable_v = is_trivially_assignable_v<T &, const T &>;
+
+    template <typename T>
+    struct is_nothrow_copy_assignable : is_nothrow_assignable<T &, const T &>
+    {
+    };
+
+    namespace details
+    {
         template <typename, typename T>
         struct is_destructible : false_type
         {

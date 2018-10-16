@@ -4,6 +4,7 @@
 
 #include <ut_config.h>
 #include <type_traits>
+#include <utility>
 
 ut_test(integral_constant)
 {
@@ -104,14 +105,54 @@ ut_test(is_void)
     static_assert(!std::is_void_v<int>);
 }
 
+namespace
+{
+    class not_trivially_constructible
+    {
+    public:
+        not_trivially_constructible(int v) noexcept : _value(v + 2)
+        {
+        }
+
+    private:
+        int _value;
+    };
+
+    class throw_constructible
+    {
+    public:
+        throw_constructible()
+        {
+            throw 1;
+        }
+    };
+}
+
 ut_test(is_constructible)
 {
     static_assert(std::is_constructible_v<int, int>);
     static_assert(!std::is_constructible_v<int, const char *>);
+
+    static_assert(std::is_trivially_constructible_v<int, int>);
+    static_assert(!std::is_trivially_constructible_v<int, const char *>);
+    static_assert(!std::is_trivially_constructible_v<not_trivially_constructible>);
+    static_assert(!std::is_trivially_constructible_v<not_trivially_constructible, int>);
+
+    static_assert(std::is_nothrow_constructible_v<not_trivially_constructible, int>);
+    static_assert(!std::is_nothrow_constructible_v<throw_constructible>);
 }
 
 namespace
 {
+    struct not_trivially_move_constructible
+    {
+        not_trivially_move_constructible(not_trivially_move_constructible &&other) : _value(other._value + 2)
+        {
+        }
+
+        int _value{0};
+    };
+
     class not_move_constructible
     {
     public:
@@ -140,9 +181,164 @@ ut_test(is_move_constructible)
     static_assert(std::is_move_constructible_v<throw_move_constructible>);
     static_assert(!std::is_move_constructible_v<not_move_constructible>);
 
+    static_assert(std::is_trivially_move_constructible_v<int>);
+    static_assert(!std::is_trivially_move_constructible_v<not_trivially_move_constructible>);
+
     static_assert(std::is_nothrow_move_constructible_v<nothrow_move_constructible>);
     static_assert(!std::is_nothrow_move_constructible_v<throw_move_constructible>);
     static_assert(!std::is_nothrow_move_constructible_v<not_move_constructible>);
+}
+
+namespace
+{
+    class not_trivially_assignable
+    {
+    public:
+        not_trivially_assignable &operator=(int v) noexcept
+        {
+            _value = v + 2;
+            return *this;
+        }
+
+    private:
+        int _value;
+    };
+
+    class throw_assignable
+    {
+    public:
+        throw_assignable &operator=(int)
+        {
+            throw 1;
+        }
+    };
+}
+
+ut_test(is_assignable)
+{
+    static_assert(!std::is_assignable_v<int, int>);
+    static_assert(std::is_assignable_v<int &, int>);
+    static_assert(!std::is_assignable_v<int, const char *>);
+    static_assert(!std::is_assignable_v<int &, const char *>);
+
+    static_assert(std::is_trivially_assignable_v<int &, int>);
+    static_assert(!std::is_trivially_assignable_v<int &, const char *>);
+    static_assert(!std::is_trivially_assignable_v<not_trivially_assignable &, int>);
+
+    static_assert(std::is_nothrow_assignable_v<not_trivially_assignable &, int>);
+    static_assert(!std::is_nothrow_assignable_v<throw_assignable &, int>);
+}
+
+namespace
+{
+    struct not_trivially_move_assignable
+    {
+        not_trivially_move_assignable &operator=(not_trivially_move_assignable &&other) noexcept
+        {
+            _value = other._value + 2;
+            return *this;
+        }
+
+        int _value{0};
+    };
+
+    class not_move_assignable
+    {
+    public:
+        not_move_assignable &operator=(not_move_assignable &&) = delete;
+    };
+
+    class throw_move_assignable
+    {
+    public:
+        throw_move_assignable &operator=(throw_move_assignable &&)
+        {
+            throw 1;
+            return *this;
+        }
+    };
+
+    class nothrow_move_assignable
+    {
+    public:
+        nothrow_move_assignable &operator=(nothrow_move_assignable &&) noexcept = default;
+    };
+}
+
+ut_test(is_move_assignable)
+{
+    static_assert(std::is_move_assignable_v<nothrow_move_assignable>);
+    static_assert(std::is_move_assignable_v<throw_move_assignable>);
+    static_assert(!std::is_move_assignable_v<not_move_assignable>);
+
+    static_assert(std::is_trivially_move_assignable_v<int>);
+    static_assert(!std::is_trivially_move_assignable_v<not_trivially_move_assignable>);
+
+    static_assert(std::is_nothrow_move_assignable_v<nothrow_move_assignable>);
+    static_assert(!std::is_nothrow_move_assignable_v<throw_move_assignable>);
+    static_assert(!std::is_nothrow_move_assignable_v<not_move_assignable>);
+}
+
+namespace
+{
+    struct destructible
+    {
+    };
+
+    class not_destructible
+    {
+    public:
+        ~not_destructible() = delete;
+    };
+
+    class throw_destructible
+    {
+    public:
+        ~throw_destructible() noexcept(false)
+        {
+            throw 1;
+        }
+    };
+}
+
+ut_test(is_destructible)
+{
+    static_assert(std::is_destructible_v<int>);
+    static_assert(std::is_destructible_v<destructible>);
+    static_assert(!std::is_destructible_v<not_destructible>);
+
+    static_assert(std::is_trivially_destructible_v<int>);
+    static_assert(std::is_trivially_destructible_v<destructible>);
+    static_assert(!std::is_trivially_destructible_v<not_destructible>);
+
+    static_assert(std::is_nothrow_destructible_v<int>);
+    static_assert(std::is_nothrow_destructible_v<destructible>);
+    static_assert(!std::is_nothrow_destructible_v<throw_destructible>);
+    static_assert(!std::is_nothrow_destructible_v<not_destructible>);
+}
+
+namespace
+{
+    struct dummy_struct
+    {
+        double d;
+        int i;
+    };
+}
+
+ut_test(aligned_storage)
+{
+    using int_storage = std::aligned_storage_t<sizeof(int), alignof(int)>;
+    static_assert(sizeof(int_storage) >= sizeof(int));
+    static_assert(alignof(int_storage) >= alignof(int));
+
+    using char_storage = std::aligned_storage_t<sizeof(char), alignof(char)>;
+    static_assert(sizeof(char_storage) >= sizeof(char));
+    static_assert(alignof(char_storage) >= alignof(char));
+
+    using dummy_struct_storage = std::aligned_storage_t<sizeof(dummy_struct), alignof(dummy_struct)>;
+    static_assert(sizeof(dummy_struct_storage) >= sizeof(dummy_struct));
+    static_assert(alignof(dummy_struct_storage) >= alignof(dummy_struct));
 }
 
 ut_group(type_traits,
@@ -160,7 +356,11 @@ ut_group(type_traits,
          ut_get_test(add_volatile),
          ut_get_test(is_void),
          ut_get_test(is_constructible),
-         ut_get_test(is_move_constructible)
+         ut_get_test(is_move_constructible),
+         ut_get_test(is_assignable),
+         ut_get_test(is_move_assignable),
+         ut_get_test(is_destructible),
+         ut_get_test(aligned_storage),
 );
 
 void run_type_traits_tests()
