@@ -4,13 +4,15 @@ project(for_libcxx)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -nostdlib -nostdinc -fno-builtin -fno-rtti -fno-exceptions -O3")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -nostdlib -nostdinc -fno-builtin -fno-rtti -fno-exceptions -O3 -DFOR_LIBCXX_NO_EXCEPTIONS")
 
 add_subdirectory(lib/for_libc)
 
 set(LIBCXX_SOURCES
+        include/details/config.hpp
         include/cstdint
         include/cstddef
+        include/exception
         include/type_traits
         include/utility
         include/new

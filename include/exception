@@ -1,0 +1,23 @@
+/*
+** Created by doom on 16/10/18.
+*/
+
+#ifndef FOR_LIBCXX_EXCEPTION
+#define FOR_LIBCXX_EXCEPTION
+
+namespace std
+{
+    class exception
+    {
+    public:
+        exception() noexcept = default;
+
+        exception(const exception &) noexcept = default;
+
+        virtual ~exception() = default;
+
+        virtual const char *what() const noexcept = 0;
+    };
+}
+
+#endif /* !FOR_LIBCXX_EXCEPTION */
