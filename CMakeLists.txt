@@ -13,6 +13,7 @@ set(LIBCXX_SOURCES
         include/cstddef
         include/type_traits
         include/utility
+        include/new
         src/dummy/dummy.cpp
         )
 

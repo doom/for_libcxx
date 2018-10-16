@@ -1,0 +1,28 @@
+/*
+** Created by doom on 14/10/18.
+*/
+
+#ifndef FOR_LIBCXX_NEW
+#define FOR_LIBCXX_NEW
+
+#include <cstddef>
+
+inline void *operator new(size_t, void *p)
+{
+    return p;
+}
+
+inline void *operator new[](size_t, void *p)
+{
+    return p;
+}
+
+inline void operator delete(void *, void *)
+{
+}
+
+inline void operator delete[](void *, void *)
+{
+}
+
+#endif /* !FOR_LIBCXX_NEW */
