@@ -99,10 +99,65 @@ ut_test(add_volatile)
     static_assert(std::is_same_v<std::add_volatile_t<int *>, int *volatile>);
 }
 
+ut_test(add_pointer)
+{
+    static_assert(std::is_same_v<std::add_pointer_t<int>, int *>);
+    static_assert(std::is_same_v<std::add_pointer_t<void(int, int)>, void (*)(int, int)>);
+    static_assert(std::is_same_v<std::add_pointer_t<void (&)(int, int)>, void (&)(int, int)>);
+}
+
 ut_test(is_void)
 {
     static_assert(std::is_void_v<void>);
     static_assert(!std::is_void_v<int>);
+}
+
+ut_test(is_pointer)
+{
+    static_assert(std::is_pointer_v<int *>);
+    static_assert(!std::is_pointer_v<int>);
+    static_assert(std::is_pointer_v<int **>);
+    static_assert(!std::is_pointer_v<int &>);
+    static_assert(!std::is_pointer_v<int[]>);
+}
+
+ut_test(is_array)
+{
+    static_assert(std::is_array_v<int[]>);
+    static_assert(std::is_array_v<int[42]>);
+    static_assert(!std::is_array_v<int *>);
+    static_assert(!std::is_array_v<void (*)(int)>);
+    static_assert(!std::is_array_v<int &>);
+    static_assert(!std::is_array_v<int>);
+}
+
+namespace
+{
+    struct is_function_test
+    {
+        void member_func()
+        {
+
+        }
+    };
+
+    void is_function_test_f1(int, int)
+    {
+
+    }
+
+    int is_function_test_f2(int, float, ...)
+    {
+        return 0;
+    }
+}
+
+ut_test(is_function)
+{
+    static_assert(!std::is_function_v<int>);
+    static_assert(!std::is_function_v<decltype(&is_function_test::member_func)>);
+    static_assert(std::is_function_v<decltype(is_function_test_f1)>);
+    static_assert(std::is_function_v<decltype(is_function_test_f2)>);
 }
 
 namespace
@@ -326,6 +381,33 @@ namespace
     };
 }
 
+ut_test(conditional)
+{
+    using T1 = std::conditional_t<true, int, float>;
+    static_assert(std::is_same_v<T1, int>);
+
+    using T2 = std::conditional_t<false, int, float>;
+    static_assert(std::is_same_v<T2, float>);
+}
+
+ut_test(decay)
+{
+    using T1 = std::decay_t<int>;
+    static_assert(std::is_same_v<int, T1>);
+
+    using T2 = std::decay_t<int &>;
+    static_assert(std::is_same_v<int, T2>);
+
+    using T3 = std::decay_t<const int &>;
+    static_assert(std::is_same_v<int, T3>);
+
+    using T4 = std::decay_t<const int[200]>;
+    static_assert(std::is_same_v<const int *, T4>);
+
+    using T5 = std::decay_t<int(float, int)>;
+    static_assert(std::is_same_v<int (*)(float, int), T5>);
+}
+
 ut_test(aligned_storage)
 {
     using int_storage = std::aligned_storage_t<sizeof(int), alignof(int)>;
@@ -354,13 +436,19 @@ ut_group(type_traits,
          ut_get_test(remove_volatile),
          ut_get_test(add_const),
          ut_get_test(add_volatile),
+         ut_get_test(add_pointer),
          ut_get_test(is_void),
+         ut_get_test(is_pointer),
+         ut_get_test(is_array),
+         ut_get_test(is_function),
          ut_get_test(is_constructible),
          ut_get_test(is_move_constructible),
          ut_get_test(is_assignable),
          ut_get_test(is_move_assignable),
          ut_get_test(is_destructible),
-         ut_get_test(aligned_storage),
+         ut_get_test(conditional),
+         ut_get_test(decay),
+         ut_get_test(aligned_storage)
 );
 
 void run_type_traits_tests()

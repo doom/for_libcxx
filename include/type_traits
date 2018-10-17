@@ -9,6 +9,32 @@
 
 namespace std
 {
+    namespace details
+    {
+        template <bool cond>
+        struct conditional_t_impl
+        {
+            template <typename T, typename U>
+            using func = T;
+        };
+
+        template <>
+        struct conditional_t_impl<false>
+        {
+            template <typename T, typename U>
+            using func = U;
+        };
+    }
+
+    template <bool cond, typename T, typename U>
+    using conditional_t = typename details::conditional_t_impl<cond>::template func<T, U>;
+
+    template <bool cond, typename T, typename U>
+    struct conditional
+    {
+        using type = conditional_t<cond, T, U>;
+    };
+
     template <typename T, T v>
     struct integral_constant
     {
@@ -172,12 +198,12 @@ namespace std
     inline constexpr const bool is_const_v = is_const<T>::value;
 
     template <typename T>
-    struct is_lvalue_reference : std::false_type
+    struct is_lvalue_reference : false_type
     {
     };
 
     template <typename T>
-    struct is_lvalue_reference<T &> : std::true_type
+    struct is_lvalue_reference<T &> : true_type
     {
     };
 
@@ -185,17 +211,145 @@ namespace std
     inline constexpr const bool is_lvalue_reference_v = is_lvalue_reference<T>::value;
 
     template <typename T>
-    struct is_rvalue_reference : std::false_type
+    struct is_rvalue_reference : false_type
     {
     };
 
     template <typename T>
-    struct is_rvalue_reference<T &&> : std::true_type
+    struct is_rvalue_reference<T &&> : true_type
     {
     };
 
     template <typename T>
     inline constexpr const bool is_rvalue_reference_v = is_rvalue_reference<T>::value;
+
+    template <typename T>
+    inline constexpr const bool is_function_v = not is_const_v<add_const_t<T>>;
+
+    template <typename T>
+    struct is_function : bool_constant<is_function_v<T>>
+    {
+    };
+
+    namespace details
+    {
+        template <typename T>
+        struct is_pointer_impl : false_type
+        {
+        };
+
+        template <typename T>
+        struct is_pointer_impl<T *> : true_type
+        {
+        };
+    }
+
+    template <typename T>
+    inline constexpr const bool is_pointer_v = details::is_pointer_impl<remove_cv_t<T>>::value;
+
+    template <typename T>
+    struct is_pointer : bool_constant<is_pointer_v<T>>
+    {
+    };
+
+    template <typename T>
+    struct is_array : false_type
+    {
+    };
+
+    template <typename T>
+    struct is_array<T[]> : true_type
+    {
+    };
+
+    template <typename T, size_t N>
+    struct is_array<T[N]> : true_type
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_array_v = is_array<T>::value;
+
+    namespace details
+    {
+        template <typename T, bool is_function_type>
+        struct add_pointer_impl
+        {
+            using type = remove_reference_t<T> *;
+        };
+
+        /** If T is a function but with qualifiers or through a reference */
+        template <typename T>
+        struct add_pointer_impl<T, true>
+        {
+            using type = T;
+        };
+
+        template <typename T, typename ...Args>
+        struct add_pointer_impl<T(Args...), true>
+        {
+            using type = T (*)(Args...);
+        };
+
+        /** If T is a C variadic function */
+        template <typename T, typename ...Args>
+        struct add_pointer_impl<T(Args..., ...), true>
+        {
+            using type = T (*)(Args..., ...);
+        };
+    }
+
+    template <typename T>
+    struct add_pointer : details::add_pointer_impl<T, is_function_v<T>>
+    {
+    };
+
+    template <typename T>
+    using add_pointer_t = typename add_pointer<T>::type;
+
+    template <typename T>
+    struct remove_extent
+    {
+        using type = T;
+    };
+
+    template <typename T>
+    struct remove_extent<T[]>
+    {
+        using type = T;
+    };
+
+    template <typename T, size_t N>
+    struct remove_extent<T[N]>
+    {
+        using type = T;
+    };
+
+    template <typename T>
+    using remove_extent_t = typename remove_extent<T>::type;
+
+    template <typename T>
+    struct decay
+    {
+    private:
+        /** First, remove any reference */
+        using Unrefed = remove_reference_t<T>;
+
+    public:
+        using type = conditional_t<is_array_v<Unrefed>,
+            /** Arrays of T decay to pointers to T */
+            remove_extent_t<Unrefed> *,
+            conditional_t<is_function_v<Unrefed>,
+                /** Function types decay to pointer to functions */
+                add_pointer_t<Unrefed>,
+                /** Other types lose their qualifiers */
+                remove_cv_t<Unrefed>
+            >
+        >;
+    };
+
+    template <typename T>
+    using decay_t = typename decay<T>::type;
 
     template <typename T>
     T &&declval() noexcept;
@@ -346,7 +500,6 @@ namespace std
     template <typename T, typename U>
     inline constexpr const bool is_nothrow_assignable_v = is_nothrow_assignable<T, U>::value;
 
-
     template <typename T>
     struct is_move_assignable : is_assignable<T &, T &&>
     {
@@ -391,6 +544,9 @@ namespace std
     struct is_nothrow_copy_assignable : is_nothrow_assignable<T &, const T &>
     {
     };
+
+    template <typename T>
+    inline constexpr const bool is_nothrow_copy_assignable_v = is_nothrow_assignable_v<T &, const T &>;
 
     namespace details
     {
