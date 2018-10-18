@@ -9,6 +9,10 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -nostdlib -nostdinc -fno-builtin -fno-rtti -f
 add_subdirectory(lib/for_libc)
 
 set(LIBCXX_SOURCES
+        include/details/move_constructible.hpp
+        include/details/copy_constructible.hpp
+        include/details/move_assignable.hpp
+        include/details/copy_assignable.hpp
         include/details/config.hpp
         include/cstdint
         include/cstddef
@@ -16,6 +20,7 @@ set(LIBCXX_SOURCES
         include/type_traits
         include/utility
         include/new
+        include/optional
         src/dummy/dummy.cpp
         )
 
@@ -31,6 +36,7 @@ add_executable(for_libcxx-tests
         tests/tests-main.cpp
         tests/tests-type_traits.cpp
         tests/tests-utility.cpp
+        tests/tests-optional.cpp
         )
 
 set_target_properties(for_libcxx-tests PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")

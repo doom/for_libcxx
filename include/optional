@@ -1,0 +1,471 @@
+/*
+** Created by doom on 13/10/18.
+*/
+
+#ifndef FOR_LIBCXX_OPTIONAL
+#define FOR_LIBCXX_OPTIONAL
+
+#include <details/config.hpp>
+#include <details/move_constructible.hpp>
+#include <details/copy_constructible.hpp>
+#include <details/move_assignable.hpp>
+#include <details/copy_assignable.hpp>
+#include <type_traits>
+#include <utility>
+#include <new>
+#include <exception>
+
+namespace std
+{
+    struct nullopt_t
+    {
+        struct nullopt_param
+        {
+        };
+
+        constexpr explicit nullopt_t(nullopt_param) noexcept
+        {
+        }
+    };
+
+    inline constexpr nullopt_t nullopt{nullopt_t::nullopt_param{}};
+
+    class bad_optional_access : public std::exception
+    {
+    public:
+        const char *what() const noexcept override
+        {
+            return "Bad optional access";
+        }
+    };
+
+    /**
+     * This implementation (inspired by existing implementations) uses "brick-by-brick" inheritance
+     * to build the optional class. The goal is to avoid unnecessary operations for trivial types.
+     */
+    namespace details
+    {
+        /** Default case, if T is not trivially destructible */
+        template <typename T, bool = std::is_trivially_destructible_v<T>>
+        class optional_storage
+        {
+        public:
+            constexpr optional_storage() noexcept : _empty_tag(), _is_engaged(false)
+            {
+            }
+
+            template <typename ...Args>
+            constexpr optional_storage(std::in_place_t, Args &&...args) : _value(std::forward<Args>(args)...),
+                                                                          _is_engaged(true)
+            {
+
+            }
+
+            ~optional_storage()
+            {
+                if (_is_engaged) {
+                    _value.~T();
+                    _is_engaged = false;
+                }
+            }
+
+        protected:
+            struct empty_tag
+            {
+            };
+
+            union
+            {
+                empty_tag _empty_tag;
+                T _value;
+            };
+            bool _is_engaged;
+        };
+
+        /** Special case if T is trivially destructible, we can omit the destructor */
+        template <typename T>
+        class optional_storage<T, true>
+        {
+        public:
+            constexpr optional_storage() noexcept : _empty_tag(), _is_engaged(false)
+            {
+            }
+
+            template <typename ...Args>
+            constexpr optional_storage(std::in_place_t, Args &&...args) : _value(std::forward<Args>(args)...),
+                                                                          _is_engaged(true)
+            {
+            }
+
+        protected:
+            struct empty_tag
+            {
+            };
+
+            union
+            {
+                empty_tag _empty_tag;
+                T _value;
+            };
+            bool _is_engaged;
+        };
+
+        template <typename T>
+        class optional_basic_helpers : public optional_storage<T>
+        {
+        public:
+            using optional_storage<T>::optional_storage;
+
+            template <typename ...Args>
+            void construct(Args &&...args)
+            {
+                new(&this->_value) T(std::forward<Args>(args)...);
+                this->_is_engaged = true;
+            }
+
+            void wipe()
+            {
+                this->_value.~T();
+                this->_is_engaged = false;
+            }
+
+            template <typename OtherHelper>
+            void replace(OtherHelper &&other)
+            {
+                if (other.has_value()) {
+                    if (has_value()) {
+                        this->_value = std::forward<OtherHelper>(other).unchecked_value();
+                    } else {
+                        construct(std::forward<OtherHelper>(other).unchecked_value());
+                    }
+                } else {
+                    if (has_value()) {
+                        wipe();
+                    }
+                }
+            }
+
+            constexpr bool has_value() const noexcept
+            {
+                return this->_is_engaged;
+            }
+
+            constexpr T &unchecked_value() & noexcept
+            {
+                return this->_value;
+            }
+
+            const T &unchecked_value() const & noexcept
+            {
+                return this->_value;
+            }
+
+            T &&unchecked_value() && noexcept
+            {
+                return std::move(this->_value);
+            }
+
+            constexpr const T &&unchecked_value() const && noexcept
+            {
+                return std::move(this->_value);
+            }
+        };
+
+        /** Default case, if T is not trivially move constructible */
+        template <typename T, bool = std::is_trivially_move_constructible_v<T>>
+        class optional_move_constructor_helpers : public optional_basic_helpers<T>
+        {
+        public:
+            using optional_basic_helpers<T>::optional_basic_helpers;
+
+            optional_move_constructor_helpers(optional_move_constructor_helpers &&other)
+            noexcept(std::is_nothrow_move_constructible_v<T>)
+            {
+                if (other.has_value()) {
+                    this->construct(std::move(other).unchecked_value());
+                } else {
+                    this->_is_engaged = false;
+                }
+            }
+
+            optional_move_constructor_helpers(const optional_move_constructor_helpers &) = default;
+
+            optional_move_constructor_helpers &operator=(optional_move_constructor_helpers &&other) noexcept = default;
+
+            optional_move_constructor_helpers &operator=(const optional_move_constructor_helpers &) = default;
+        };
+
+        /** Special case if T is trivially move constructible, we can omit the move constructor */
+        template <typename T>
+        class optional_move_constructor_helpers<T, true> : public optional_basic_helpers<T>
+        {
+        public:
+            using optional_basic_helpers<T>::optional_basic_helpers;
+        };
+
+        /** Default case, if T is not trivially copy constructible */
+        template <typename T, bool = std::is_trivially_copy_constructible_v<T>>
+        class optional_copy_constructor_helpers : public optional_move_constructor_helpers<T>
+        {
+        public:
+            using optional_move_constructor_helpers<T>::optional_move_constructor_helpers;
+
+            optional_copy_constructor_helpers(optional_copy_constructor_helpers &&) noexcept = default;
+
+            optional_copy_constructor_helpers(const optional_copy_constructor_helpers &other)
+            noexcept(std::is_nothrow_copy_constructible_v<T>)
+            {
+                if (other.has_value()) {
+                    this->construct(other.unchecked_value());
+                } else {
+                    this->_is_engaged = false;
+                }
+            }
+
+            optional_copy_constructor_helpers &operator=(optional_copy_constructor_helpers &&) noexcept = default;
+
+            optional_copy_constructor_helpers &operator=(const optional_copy_constructor_helpers &other) = default;
+        };
+
+        /** Special case if T is trivially copy assignable, we can omit the copy constructor */
+        template <typename T>
+        class optional_copy_constructor_helpers<T, true> : public optional_move_constructor_helpers<T>
+        {
+        public:
+            using optional_move_constructor_helpers<T>::optional_move_constructor_helpers;
+        };
+
+        /** Default case, if T is not trivially move assignable, move constructible and destructible.
+         * All these are required because our move assignment operator calls the replace() member function,
+         * which can either move assign, move construct, or destroy the contained value.
+         */
+        template <typename T, bool = std::is_trivially_move_assignable_v<T>
+                                     && std::is_trivially_move_constructible_v<T>
+                                     && std::is_trivially_destructible_v<T>>
+        class optional_move_assignment_op_helpers : public optional_copy_constructor_helpers<T>
+        {
+        public:
+            using optional_copy_constructor_helpers<T>::optional_copy_constructor_helpers;
+
+            optional_move_assignment_op_helpers(optional_move_assignment_op_helpers &&) noexcept = default;
+
+            optional_move_assignment_op_helpers(const optional_move_assignment_op_helpers &) = default;
+
+            optional_move_assignment_op_helpers &operator=(optional_move_assignment_op_helpers &&other)
+            noexcept(std::is_nothrow_move_assignable_v<T>)
+            {
+                this->replace(std::move(other));
+                return *this;
+            }
+
+            optional_move_assignment_op_helpers &operator=(const optional_move_assignment_op_helpers &) = default;
+        };
+
+        /** Special case if T is trivially move assignable, we can omit the move assignment_op */
+        template <typename T>
+        class optional_move_assignment_op_helpers<T, true> : public optional_copy_constructor_helpers<T>
+        {
+        public:
+            using optional_copy_constructor_helpers<T>::optional_copy_constructor_helpers;
+        };
+
+        /** Default case, if T is not trivially copy assignable, copy constructible and destructible.
+         * All these are required because our copy assignment operator calls the replace() member function,
+         * which can either copy assign, copy construct, or destroy the contained value.
+         */
+        template <typename T, bool = std::is_trivially_copy_assignable_v<T>
+                                     && std::is_trivially_copy_constructible_v<T>
+                                     && std::is_trivially_destructible_v<T>>
+        class optional_copy_assignment_op_helpers : public optional_move_assignment_op_helpers<T>
+        {
+        public:
+            using optional_move_assignment_op_helpers<T>::optional_move_assignment_op_helpers;
+
+            optional_copy_assignment_op_helpers(optional_copy_assignment_op_helpers &&) noexcept = default;
+
+            optional_copy_assignment_op_helpers(const optional_copy_assignment_op_helpers &) = default;
+
+            optional_copy_assignment_op_helpers &operator=(optional_copy_assignment_op_helpers &&) noexcept = default;
+
+            optional_copy_assignment_op_helpers &operator=(const optional_copy_assignment_op_helpers &other)
+            noexcept(std::is_nothrow_copy_assignable_v<T>)
+            {
+                this->replace(other);
+                return *this;
+            }
+        };
+
+        /** Special case if T is trivially copy assignable, we can omit the copy assignment_op */
+        template <typename T>
+        class optional_copy_assignment_op_helpers<T, true> : public optional_move_assignment_op_helpers<T>
+        {
+        public:
+            using optional_move_assignment_op_helpers<T>::optional_move_assignment_op_helpers;
+        };
+
+        template <typename T>
+        class optional_base : public optional_copy_assignment_op_helpers<T>
+        {
+        public:
+            using optional_copy_assignment_op_helpers<T>::optional_copy_assignment_op_helpers;
+        };
+
+        template <typename T>
+        class unsupported_operator_deleter :
+            public details::move_constructible_if<std::is_move_constructible_v<T>>,
+            public details::copy_constructible_if<std::is_copy_constructible_v<T>>,
+            public details::move_assignable_if<std::is_move_assignable_v<T>>,
+            public details::copy_assignable_if<std::is_copy_assignable_v<T>>
+        {
+        };
+    }
+
+    template <typename T>
+    class optional : private details::optional_base<T>, private details::unsupported_operator_deleter<T>
+    {
+    public:
+        using value_type = T;
+        using details::optional_base<T>::optional_base;
+        using details::unsupported_operator_deleter<T>::unsupported_operator_deleter;
+
+        constexpr optional() noexcept = default;
+
+        constexpr optional(nullopt_t) noexcept
+        {
+        }
+
+        template <typename U = value_type, typename = std::enable_if_t<std::is_constructible_v<T, U &&>>>
+        constexpr optional(U &&value) noexcept(std::is_nothrow_constructible_v<T, U &&>)
+            : details::optional_base<T>::optional_base(in_place, std::forward<U>(value))
+        {
+        }
+
+        ~optional() noexcept(std::is_nothrow_destructible_v<T>) = default;
+
+        constexpr optional(optional &&other) noexcept(std::is_nothrow_move_constructible_v<T>) = default;
+
+        constexpr optional(const optional &other) noexcept(std::is_nothrow_copy_constructible_v<T>) = default;
+
+        constexpr optional &operator=(optional &&other)
+        noexcept(std::is_nothrow_destructible_v<T>
+                 && std::is_nothrow_move_constructible_v<T>
+                 && std::is_nothrow_move_assignable_v<T>) = default;
+
+        constexpr optional &operator=(const optional &other)
+        noexcept(std::is_nothrow_destructible_v<T>
+                 && std::is_nothrow_copy_constructible_v<T>
+                 && std::is_nothrow_copy_assignable_v<T>) = default;
+
+        template <typename ...Args>
+        constexpr void emplace(Args &&...args)
+        noexcept(std::is_nothrow_destructible_v<T> && std::is_nothrow_constructible_v<T>)
+        {
+            if (has_value())
+                this->wipe();
+            this->construct(std::forward<Args>(args)...);
+        }
+
+        using details::optional_base<T>::has_value;
+
+        constexpr operator bool() const noexcept
+        {
+            return has_value();
+        }
+
+        void reset() noexcept(std::is_nothrow_destructible_v<T>)
+        {
+            if (has_value())
+                this->wipe();
+        }
+
+        constexpr const T &operator*() const & noexcept
+        {
+            return this->unchecked_value();
+        }
+
+        constexpr T &operator*() & noexcept
+        {
+            return this->unchecked_value();
+        }
+
+        constexpr const T &&operator*() const && noexcept
+        {
+            return std::move(this->unchecked_value());
+        }
+
+        constexpr T &&operator*() && noexcept
+        {
+            return std::move(this->unchecked_value());
+        }
+
+        constexpr const T *operator->() const noexcept
+        {
+            return &this->unchecked_value();
+        }
+
+        constexpr T *operator->() noexcept
+        {
+            return &this->unchecked_value();
+        }
+
+        constexpr const T &value() const &
+        {
+            if (not has_value())
+                FOR_LIBCXX_THROW(std::bad_optional_access());
+            return this->unchecked_value();
+        }
+
+        constexpr T &value() &
+        {
+            if (not has_value())
+                FOR_LIBCXX_THROW(std::bad_optional_access());
+            return this->unchecked_value();
+        }
+
+        constexpr const T &&value() const &&
+        {
+            if (not has_value())
+                FOR_LIBCXX_THROW(std::bad_optional_access());
+            return std::move(this->unchecked_value());
+        }
+
+        constexpr T &&value() &&
+        {
+            if (not has_value())
+                FOR_LIBCXX_THROW(std::bad_optional_access());
+            return std::move(this->unchecked_value());
+        }
+
+        template <typename U>
+        constexpr T value_or(U &&default_value) const &
+        {
+            if (has_value())
+                return this->unchecked_value();
+            return std::forward<U>(default_value);
+        }
+
+        template <typename U>
+        constexpr T value_or(U &&default_value) const &&
+        {
+            if (has_value())
+                return std::move(this->unchecked_value());
+            return std::forward<U>(default_value);
+        }
+    };
+
+    template <typename T>
+    constexpr std::optional<std::decay_t<T>> make_optional(T &&value)
+    noexcept(noexcept(std::optional<std::decay_t<T>>(std::forward<T>(value))))
+    {
+        return std::optional<std::decay_t<T>>(std::forward<T>(value));
+    }
+
+    template <typename T, typename ...Args>
+    constexpr std::optional<T> make_optional(Args &&...args)
+    noexcept(noexcept(std::optional<T>(std::in_place, std::forward<Args>(args)...)))
+    {
+        return std::optional<T>(std::in_place, std::forward<Args>(args)...);
+    }
+}
+
+#endif /* !FOR_LIBCXX_OPTIONAL */
