@@ -14,6 +14,7 @@ namespace std
     };
 
     using ::size_t;
+    using ::ptrdiff_t;
 }
 
 #endif /* !FOR_LIBCXX_CSTDDEF */

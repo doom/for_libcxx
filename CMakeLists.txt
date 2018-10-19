@@ -21,6 +21,8 @@ set(LIBCXX_SOURCES
         include/utility
         include/new
         include/optional
+        include/initializer_list
+        include/iterator
         src/dummy/dummy.cpp
         )
 
@@ -37,6 +39,8 @@ add_executable(for_libcxx-tests
         tests/tests-type_traits.cpp
         tests/tests-utility.cpp
         tests/tests-optional.cpp
+        tests/tests-iterator.cpp
+        tests/tests-initializer_list.cpp
         )
 
 set_target_properties(for_libcxx-tests PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")

@@ -1,0 +1,48 @@
+/*
+** Created by doom on 17/10/18.
+*/
+
+#ifndef FOR_LIBCXX_INITIALIZER_LIST
+#define FOR_LIBCXX_INITIALIZER_LIST
+
+#include <cstddef>
+
+namespace std
+{
+    template <typename T>
+    class initializer_list
+    {
+    public:
+        using value_type = T;
+        using reference = const T &;
+        using const_reference = const T &;
+        using size_type = std::size_t;
+        using iterator = const T *;
+        using const_iterator = const T *;
+
+        constexpr initializer_list() noexcept
+        {
+        }
+
+        constexpr size_type size() const noexcept
+        {
+            return _len;
+        }
+
+        constexpr iterator begin() const noexcept
+        {
+            return _array;
+        }
+
+        constexpr iterator end() const noexcept
+        {
+            return _array + _len;
+        }
+
+    private:
+        const T *_array;
+        size_type _len;
+    };
+}
+
+#endif /* !FOR_LIBCXX_INITIALIZER_LIST */
