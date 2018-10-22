@@ -19,6 +19,7 @@ set(LIBCXX_SOURCES
         include/cstdint
         include/cstddef
         include/exception
+        include/stdexcept
         include/type_traits
         include/utility
         include/new

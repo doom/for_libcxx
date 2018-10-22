@@ -1,0 +1,32 @@
+/*
+** Created by doom on 20/10/18.
+*/
+
+#ifndef FOR_LIBCXX_STDEXCEPT
+#define FOR_LIBCXX_STDEXCEPT
+
+#include <exception>
+
+namespace std
+{
+    class logic_error : public std::exception
+    {
+    public:
+        logic_error(const char *) noexcept
+        {
+        }
+    };
+
+    class out_of_range : public logic_error
+    {
+    public:
+        using logic_error::logic_error;
+
+        const char *what() const noexcept override
+        {
+            return "out of range";
+        }
+    };
+}
+
+#endif /* !FOR_LIBCXX_STDEXCEPT */
