@@ -9,11 +9,9 @@
 
 namespace std::details
 {
-    inline constexpr int constexpr_memcmp(const void *p1, const void *p2, size_t n) noexcept
+    template <typename CharT>
+    inline constexpr int constexpr_memcmp(const CharT *s1, const CharT *s2, size_t n) noexcept
     {
-        const auto *s1 = static_cast<const unsigned char *>(p1);
-        const auto *s2 = static_cast<const unsigned char *>(p2);
-
         while (n--) {
             if (*s1 < *s2)
                 return -1;
@@ -35,14 +33,13 @@ namespace std::details
         return cur - str;
     }
 
-    inline constexpr void *constexpr_memchr(const void *p, int c, size_t n) noexcept
+    template <typename CharT>
+    inline constexpr const CharT *constexpr_memchr(const CharT *p, int c, size_t n) noexcept
     {
-        const auto *s = static_cast<const unsigned char *>(p);
-
         while (n--) {
-            if (*s == c)
-                return (void *)s;
-            ++s;
+            if ((unsigned char)*p == c)
+                return p;
+            ++p;
         }
         return nullptr;
     }

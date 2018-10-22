@@ -85,7 +85,7 @@ namespace std
 
         static constexpr int compare(const char_type *s1, const char_type *s2, size_t n) noexcept
         {
-            if constexpr (is_constant_value(n) && is_constant_array(s1, n) && is_constant_array(s2, n)) {
+            if (is_constant_value(n) && is_constant_array(s1, n) && is_constant_array(s2, n)) {
                 return details::constexpr_memcmp(s1, s2, n);
             }
             return __builtin_memcmp(s1, s2, n);
@@ -101,8 +101,8 @@ namespace std
 
         static constexpr const char_type *find(const char_type *p, size_t n, const char_type &ch)
         {
-            if constexpr (is_constant_value(n) && is_constant_value(ch) && is_constant_array(p, n)) {
-                return (const char_type *)details::constexpr_memchr(p, ch, n);
+            if (is_constant_value(n) && is_constant_value(ch) && is_constant_array(p, n)) {
+                return details::constexpr_memchr(p, ch, n);
             }
             return (const char_type *)__builtin_memchr(p, ch, n);
         }
