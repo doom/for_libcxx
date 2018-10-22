@@ -8,6 +8,7 @@ void run_optional_tests();
 void run_iterator_tests();
 void run_initializer_list_tests();
 void run_char_traits_tests();
+void run_string_view_tests();
 
 int main()
 {
@@ -17,4 +18,5 @@ int main()
     run_iterator_tests();
     run_initializer_list_tests();
     run_char_traits_tests();
+    run_string_view_tests();
 }
