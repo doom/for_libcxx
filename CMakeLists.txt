@@ -22,8 +22,9 @@ set(LIBCXX_SOURCES
         include/type_traits
         include/utility
         include/new
-        include/optional
         include/initializer_list
+        include/algorithm
+        include/optional
         include/iterator
         src/dummy/dummy.cpp
         )

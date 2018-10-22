@@ -1,0 +1,17 @@
+/*
+** Created by doom on 20/10/18.
+*/
+
+#ifndef FOR_LIBCXX_ALGORITHM_HPP
+#define FOR_LIBCXX_ALGORITHM_HPP
+
+namespace std
+{
+    template <typename T>
+    constexpr const T &min(const T &a, const T &b) noexcept(noexcept(a < b))
+    {
+        return a > b ? b : a;
+    }
+}
+
+#endif /* !FOR_LIBCXX_ALGORITHM_HPP */
