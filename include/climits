@@ -1,0 +1,10 @@
+/*
+** Created by doom on 29/10/18.
+*/
+
+#ifndef FOR_LIBCXX_CLIMITS
+#define FOR_LIBCXX_CLIMITS
+
+#include <limits.h>
+
+#endif /* !FOR_LIBCXX_CLIMITS */
