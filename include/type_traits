@@ -198,6 +198,19 @@ namespace std
     inline constexpr const bool is_const_v = is_const<T>::value;
 
     template <typename T>
+    struct is_volatile : false_type
+    {
+    };
+
+    template <typename T>
+    struct is_volatile<volatile T> : true_type
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_volatile_v = is_volatile<T>::value;
+
+    template <typename T>
     struct is_lvalue_reference : false_type
     {
     };
@@ -269,6 +282,221 @@ namespace std
 
     template <typename T>
     inline constexpr const bool is_array_v = is_array<T>::value;
+
+    namespace details
+    {
+        template <typename T>
+        struct is_integral : std::false_type
+        {
+        };
+
+        template <>
+        struct is_integral<bool> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_integral<char> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_integral<signed char> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_integral<unsigned char> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_integral<short> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_integral<unsigned short> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_integral<int> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_integral<unsigned int> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_integral<long> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_integral<unsigned long> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_integral<long long> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_integral<unsigned long long> : std::true_type
+        {
+        };
+    }
+
+    template <typename T>
+    struct is_integral : details::is_integral<std::remove_cv_t<T>>
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_integral_v = is_integral<std::remove_cv_t<T>>::value;
+
+    namespace details
+    {
+        template <typename T>
+        struct is_floating_point : std::false_type
+        {
+        };
+
+        template <>
+        struct is_floating_point<float> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_floating_point<double> : std::true_type
+        {
+        };
+
+        template <>
+        struct is_floating_point<long double> : std::true_type
+        {
+        };
+    }
+
+    template <typename T>
+    struct is_floating_point : details::is_floating_point<std::remove_cv_t<T>>::value
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_floating_point_v = details::is_floating_point<std::remove_cv_t<T>>::value;
+
+    template <typename T>
+    struct is_arithmetic : std::bool_constant<is_integral_v<T> || is_floating_point_v<T>>
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_arithmetic_v = is_arithmetic<T>::value;
+
+    namespace details
+    {
+        template <typename T, bool = std::is_arithmetic_v<T>>
+        struct is_unsigned : std::bool_constant<T(0) < T(-1)>
+        {
+        };
+
+        template <typename T>
+        struct is_unsigned<T, false> : std::false_type
+        {
+        };
+    }
+
+    template <typename T>
+    struct is_unsigned : details::is_unsigned<T>
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_unsigned_v = details::is_unsigned<T>::value;
+
+    namespace details
+    {
+        template <typename UnqualifiedT>
+        struct make_unsigned
+        {
+            using type = UnqualifiedT;
+        };
+
+        template <>
+        struct make_unsigned<char>
+        {
+            using type = unsigned char;
+        };
+
+        template <>
+        struct make_unsigned<signed char>
+        {
+            using type = unsigned char;
+        };
+
+        template <>
+        struct make_unsigned<short>
+        {
+            using type = unsigned short;
+        };
+
+        template <>
+        struct make_unsigned<int>
+        {
+            using type = unsigned int;
+        };
+
+        template <>
+        struct make_unsigned<long>
+        {
+            using type = unsigned long;
+        };
+
+        template <>
+        struct make_unsigned<long long>
+        {
+            using type = unsigned long long;
+        };
+
+        template <typename To, typename From, bool = std::is_const_v<From>, bool = std::is_volatile_v<From>>
+        struct copy_qualifiers
+        {
+            using type = To;
+        };
+
+        template <typename To, typename From>
+        struct copy_qualifiers<To, From, true, true>
+        {
+            using type = std::add_cv_t<To>;
+        };
+
+        template <typename To, typename From>
+        struct copy_qualifiers<To, From, true, false>
+        {
+            using type = std::add_const_t<To>;
+        };
+
+        template <typename To, typename From>
+        struct copy_qualifiers<To, From, false, true>
+        {
+            using type = std::add_volatile_t<To>;
+        };
+    }
+
+    template <typename T>
+    struct make_unsigned
+    {
+        // TODO: support enumeration types
+        using type = typename details::copy_qualifiers<typename details::make_unsigned<std::remove_cv_t<T>>::type, T>::type;
+    };
+
+    template <typename T>
+    using make_unsigned_t = typename details::copy_qualifiers<typename details::make_unsigned<std::remove_cv_t<T>>::type, T>::type;
 
     namespace details
     {

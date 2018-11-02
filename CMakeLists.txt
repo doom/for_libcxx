@@ -18,6 +18,7 @@ set(LIBCXX_SOURCES
         include/details/char_traits.hpp
         include/cstdint
         include/cstddef
+        include/climits
         include/exception
         include/stdexcept
         include/type_traits

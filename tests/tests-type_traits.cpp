@@ -54,6 +54,14 @@ ut_test(is_const)
     static_assert(!std::is_const_v<const int *>);
 }
 
+ut_test(is_volatile)
+{
+    static_assert(std::is_volatile_v<volatile int>);
+    static_assert(!std::is_volatile_v<int>);
+    static_assert(std::is_volatile_v<int *volatile>);
+    static_assert(!std::is_volatile_v<volatile int *>);
+}
+
 ut_test(is_lvalue_reference)
 {
     static_assert(std::is_lvalue_reference_v<const int &>);
@@ -129,6 +137,55 @@ ut_test(is_array)
     static_assert(!std::is_array_v<void (*)(int)>);
     static_assert(!std::is_array_v<int &>);
     static_assert(!std::is_array_v<int>);
+}
+
+namespace
+{
+    struct x
+    {
+    };
+}
+
+ut_test(is_integral)
+{
+    static_assert(std::is_integral_v<int>);
+    static_assert(std::is_integral_v<unsigned int>);
+    static_assert(!std::is_unsigned_v<float>);
+    static_assert(!std::is_unsigned_v<x>);
+    static_assert(std::is_integral_v<const volatile int>);
+    static_assert(std::is_integral_v<const volatile unsigned int>);
+    static_assert(!std::is_unsigned_v<const volatile float>);
+    static_assert(!std::is_unsigned_v<const volatile x>);
+    static_assert(!std::is_unsigned_v<int *>);
+}
+
+ut_test(is_floating_point)
+{
+    static_assert(std::is_floating_point_v<float>);
+    static_assert(std::is_floating_point_v<double>);
+    static_assert(std::is_floating_point_v<long double>);
+    static_assert(!std::is_floating_point_v<int>);
+    static_assert(!std::is_unsigned_v<x>);
+    static_assert(std::is_floating_point_v<const volatile float>);
+    static_assert(std::is_floating_point_v<const volatile double>);
+    static_assert(std::is_floating_point_v<const volatile long double>);
+    static_assert(!std::is_floating_point_v<const volatile int>);
+    static_assert(!std::is_unsigned_v<const volatile x>);
+    static_assert(!std::is_unsigned_v<int *>);
+}
+
+ut_test(is_unsigned)
+{
+    static_assert(!std::is_unsigned_v<int>);
+    static_assert(std::is_unsigned_v<unsigned int>);
+    static_assert(!std::is_unsigned_v<signed char>);
+    static_assert(!std::is_unsigned_v<x>);
+
+    static_assert(!std::is_unsigned_v<const volatile int>);
+    static_assert(std::is_unsigned_v<const volatile unsigned int>);
+    static_assert(!std::is_unsigned_v<const volatile signed char>);
+    static_assert(!std::is_unsigned_v<const volatile x>);
+    static_assert(!std::is_unsigned_v<int *>);
 }
 
 namespace
@@ -423,6 +480,15 @@ ut_test(aligned_storage)
     static_assert(alignof(dummy_struct_storage) >= alignof(dummy_struct));
 }
 
+ut_test(make_unsigned)
+{
+    static_assert(std::is_same_v<std::make_unsigned_t<int>, unsigned int>);
+    static_assert(std::is_same_v<std::make_unsigned_t<const int>, const unsigned int>);
+    static_assert(std::is_same_v<std::make_unsigned_t<volatile int>, volatile unsigned int>);
+    static_assert(std::is_same_v<std::make_unsigned_t<const volatile int>, const volatile unsigned int>);
+    static_assert(std::is_same_v<std::make_unsigned_t<float>, float>);
+}
+
 ut_group(type_traits,
          ut_get_test(integral_constant),
          ut_get_test(bool_constant),
@@ -440,6 +506,9 @@ ut_group(type_traits,
          ut_get_test(is_void),
          ut_get_test(is_pointer),
          ut_get_test(is_array),
+         ut_get_test(is_integral),
+         ut_get_test(is_floating_point),
+         ut_get_test(is_unsigned),
          ut_get_test(is_function),
          ut_get_test(is_constructible),
          ut_get_test(is_move_constructible),
@@ -448,7 +517,8 @@ ut_group(type_traits,
          ut_get_test(is_destructible),
          ut_get_test(conditional),
          ut_get_test(decay),
-         ut_get_test(aligned_storage)
+         ut_get_test(aligned_storage),
+         ut_get_test(make_unsigned),
 );
 
 void run_type_traits_tests()
