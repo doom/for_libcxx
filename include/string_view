@@ -83,7 +83,7 @@ namespace std
         constexpr const_reference at(size_type pos) const
         {
             if (pos >= size())
-                FOR_LIBCXX_THROW(std::out_of_range("std::string_view::at: out of range"));
+                FOR_LIBCXX_THROW(std::out_of_range("std::basic_string_view::at: out of range"));
             return _data[pos];
         }
 
@@ -123,7 +123,7 @@ namespace std
         size_type copy(value_type *dest, size_type count, size_type pos = 0) const
         {
             if (pos > size())
-                FOR_LIBCXX_THROW(std::out_of_range(std::string_view::copy: out of range));
+                FOR_LIBCXX_THROW(std::out_of_range("std::basic_string_view::copy: out of range"));
             constexpr auto nb_chars_to_copy = std::min(count, size() - pos);
             traits_type::copy(dest, data() + pos, nb_chars_to_copy);
             return nb_chars_to_copy;
