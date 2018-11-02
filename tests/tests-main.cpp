@@ -9,6 +9,7 @@ void run_iterator_tests();
 void run_initializer_list_tests();
 void run_char_traits_tests();
 void run_string_view_tests();
+void run_charconv_tests();
 
 int main()
 {
@@ -19,4 +20,5 @@ int main()
     run_initializer_list_tests();
     run_char_traits_tests();
     run_string_view_tests();
+    run_charconv_tests();
 }

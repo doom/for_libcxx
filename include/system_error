@@ -1,0 +1,17 @@
+/*
+** Created by doom on 01/11/18.
+*/
+
+#ifndef FOR_LIBCXX_SYSTEM_ERROR
+#define FOR_LIBCXX_SYSTEM_ERROR
+
+namespace std
+{
+    enum class errc
+    {
+        none,
+        value_too_large
+    };
+}
+
+#endif /* !FOR_LIBCXX_SYSTEM_ERROR */

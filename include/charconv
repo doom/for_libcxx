@@ -1,0 +1,76 @@
+/*
+** Created by doom on 01/11/18.
+*/
+
+#ifndef FOR_LIBCXX_CHARCONV
+#define FOR_LIBCXX_CHARCONV
+
+#include <cstddef>
+#include <system_error>
+#include "type_traits"
+
+namespace std
+{
+    struct to_chars_result
+    {
+        char *ptr;
+        std::errc ec;
+    };
+
+    namespace details
+    {
+        template <typename T>
+        inline std::size_t nb_digits(T t, int base) noexcept
+        {
+            static_assert(std::is_unsigned_v<T>);
+            std::size_t nb = 0;
+
+            do {
+                ++nb;
+                t /= base;
+            } while (t != 0);
+            return nb;
+        }
+
+        template <typename T>
+        std::to_chars_result to_chars(char *first, char *last, T value, int base = 10) noexcept
+        {
+            static_assert(std::is_unsigned_v<T>);
+            static char digits[] = {"0123456789abcdefghijklmnopqrstuvwxyz"};
+            auto repr_len = nb_digits(value, base);
+            std::to_chars_result ret{};
+
+            if (repr_len > last - first) {
+                ret.ec = std::errc::value_too_large;
+                ret.ptr = last;
+                return ret;
+            }
+
+            char *ptr = first + repr_len;
+            ret.ptr = first + repr_len;
+
+            do {
+                *--ptr = digits[value % base];
+                value /= base;
+            } while (value != 0);
+            return ret;
+        }
+    }
+
+    template <typename T>
+    std::to_chars_result to_chars(char *first, char *last, T value, int base = 10) noexcept
+    {
+        if constexpr (std::is_unsigned_v<T>) {
+            return details::to_chars(first, last, value, base);
+        } else {
+            if (value < 0) {
+                *first = '-';
+                return details::to_chars(first + 1, last, -static_cast<std::make_unsigned_t<T>>(value), base);
+            } else {
+                return details::to_chars(first, last, static_cast<std::make_unsigned_t<T>>(value), base);
+            }
+        }
+    }
+}
+
+#endif /* !FOR_LIBCXX_CHARCONV */
