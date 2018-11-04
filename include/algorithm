@@ -2,8 +2,8 @@
 ** Created by doom on 20/10/18.
 */
 
-#ifndef FOR_LIBCXX_ALGORITHM_HPP
-#define FOR_LIBCXX_ALGORITHM_HPP
+#ifndef FOR_LIBCXX_ALGORITHM
+#define FOR_LIBCXX_ALGORITHM
 
 #include <iterator>
 
@@ -60,6 +60,124 @@ namespace std
             return a < b;
         });
     }
+
+    template <typename InputIt, typename UnaryPredicate>
+    constexpr InputIt find_if(InputIt first, InputIt last, UnaryPredicate p) noexcept
+    {
+        while (first != last) {
+            if (p(*first)) {
+                return first;
+            }
+            ++first;
+        }
+        return last;
+    }
+
+    template <typename InputIt, typename UnaryPredicate>
+    constexpr InputIt find_if_not(InputIt first, InputIt last, UnaryPredicate p) noexcept
+    {
+        return find_if(first, last, [&p](auto &&v) {
+            return !p(std::forward<decltype(v)>(v));
+        });
+    }
+
+    template <typename InputIt, typename T>
+    constexpr InputIt find(InputIt first, InputIt last, const T &value) noexcept
+    {
+        return find_if(first, last, [&value](auto &&v) {
+            value == std::forward<decltype(v)>(v);
+        });
+    }
+
+    template <typename InputIt, typename UnaryPredicate>
+    constexpr bool all_of(InputIt first, InputIt last, UnaryPredicate p)
+    {
+        while (first != last) {
+            if (!p(*first)) {
+                return false;
+            }
+            ++first;
+        }
+        return true;
+    }
+
+    template <typename InputIt, typename UnaryPredicate>
+    constexpr bool any_of(InputIt first, InputIt last, UnaryPredicate p)
+    {
+        while (first != last) {
+            if (p(*first)) {
+                return true;
+            }
+            ++first;
+        }
+        return false;
+    }
+
+    template <typename InputIt, typename UnaryPredicate>
+    constexpr bool none_of(InputIt first, InputIt last, UnaryPredicate p)
+    {
+        while (first != last) {
+            if (p(*first)) {
+                return false;
+            }
+            ++first;
+        }
+        return true;
+    }
+
+    template <typename InputIt, typename UnaryPredicate>
+    constexpr typename std::iterator_traits<InputIt>::difference_type count_if(InputIt first,
+                                                                               InputIt last,
+                                                                               UnaryPredicate p) noexcept
+    {
+        auto ret = 0;
+
+        while (first != last) {
+            if (p(*first)) {
+                ++ret;
+            }
+        }
+        return ret;
+    }
+
+    template <typename InputIt, typename T>
+    constexpr typename std::iterator_traits<InputIt>::difference_type count(InputIt first,
+                                                                            InputIt last,
+                                                                            const T &value) noexcept
+    {
+        return count_if(first, last, [&value](auto &&v) {
+            return value == std::forward<decltype(v)>(v);
+        });
+    }
+
+    template <typename InputIt, typename OutputIt, typename UnaryOperation>
+    constexpr OutputIt transform(InputIt in_first, InputIt in_last, OutputIt out_first, UnaryOperation f)
+    {
+        while (in_first != in_last) {
+            *out_first++ = f(*in_first++);
+        }
+        return out_first;
+    }
+
+    template <typename InputIt1, typename InputIt2, typename OutputIt, typename BinaryOperation>
+    constexpr OutputIt transform(InputIt1 in_first1, InputIt1 in_last1, InputIt2 in_first2,
+                                 OutputIt out_first, BinaryOperation f)
+    {
+        while (in_first1 != in_last1) {
+            *out_first++ = f(*in_first1++, *in_first2++);
+        }
+        return out_first;
+    }
+
+    template <typename InputIt, typename UnaryFunction>
+    constexpr UnaryFunction for_each(InputIt first, InputIt last, UnaryFunction f)
+    {
+        while (first != last) {
+            f(*first);
+            ++first;
+        }
+        return f;
+    }
 }
 
-#endif /* !FOR_LIBCXX_ALGORITHM_HPP */
+#endif /* !FOR_LIBCXX_ALGORITHM */
