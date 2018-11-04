@@ -5,12 +5,60 @@
 #ifndef FOR_LIBCXX_ALGORITHM_HPP
 #define FOR_LIBCXX_ALGORITHM_HPP
 
+#include <iterator>
+
 namespace std
 {
     template <typename T>
     constexpr const T &min(const T &a, const T &b) noexcept(noexcept(a < b))
     {
         return a > b ? b : a;
+    }
+
+    template <typename ForwardIt, typename Comparator>
+    constexpr ForwardIt min_element(ForwardIt first, ForwardIt last, Comparator cmp) noexcept
+    {
+        if (first == last)
+            return last;
+
+        auto smol = first;
+
+        while (++first != last) {
+            if (cmp(*first, *smol))
+                smol = first;
+        }
+        return smol;
+    }
+
+    template <typename ForwardIt>
+    constexpr ForwardIt min_element(ForwardIt first, ForwardIt last) noexcept
+    {
+        return min_element(first, last, [](const auto &a, const auto &b) {
+            return a < b;
+        });
+    }
+
+    template <typename ForwardIt, typename Comparator>
+    constexpr ForwardIt max_element(ForwardIt first, ForwardIt last, Comparator cmp) noexcept
+    {
+        if (first == last)
+            return last;
+
+        auto big = first;
+
+        while (++first != last) {
+            if (cmp(*big, *first))
+                big = first;
+        }
+        return big;
+    }
+
+    template <typename ForwardIt>
+    constexpr ForwardIt max_element(ForwardIt first, ForwardIt last) noexcept
+    {
+        return max_element(first, last, [](const auto &a, const auto &b) {
+            return a < b;
+        });
     }
 }
 

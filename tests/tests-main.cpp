@@ -10,6 +10,7 @@ void run_initializer_list_tests();
 void run_char_traits_tests();
 void run_string_view_tests();
 void run_charconv_tests();
+void run_algorithm_tests();
 
 int main()
 {
@@ -21,4 +22,5 @@ int main()
     run_char_traits_tests();
     run_string_view_tests();
     run_charconv_tests();
+    run_algorithm_tests();
 }

@@ -157,6 +157,18 @@ namespace std
     private:
         iterator_type _iter;
     };
+
+    template <typename T, std::size_t Size>
+    constexpr T *begin(T (&arr)[Size]) noexcept
+    {
+        return arr;
+    }
+
+    template <typename T, std::size_t Size>
+    constexpr T *end(T (&arr)[Size]) noexcept
+    {
+        return arr + Size;
+    }
 }
 
 #endif /* !FOR_LIBCXX_ITERATOR */

@@ -52,6 +52,7 @@ add_executable(for_libcxx-tests
         tests/tests-char_traits.cpp
         tests/tests-string_view.cpp
         tests/tests-charconv.cpp
+        tests/tests-algorithm.cpp
         )
 
 set_target_properties(for_libcxx-tests PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
