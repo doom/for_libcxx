@@ -1,0 +1,97 @@
+/*
+** Created by doom on 10/11/18.
+*/
+
+#ifndef FOR_LIBCXX_FUNCTIONAL
+#define FOR_LIBCXX_FUNCTIONAL
+
+#include <type_traits>
+#include <utility>
+#include <memory>
+
+namespace std
+{
+    template <typename T>
+    class reference_wrapper
+    {
+    public:
+        using type = T;
+
+        reference_wrapper(T &ref) noexcept : _wrapped(std::addressof(ref))
+        {
+        }
+
+        reference_wrapper(const reference_wrapper &other) noexcept = default;
+
+        reference_wrapper &operator=(const reference_wrapper &other) noexcept = default;
+
+        operator T &() const noexcept
+        {
+            return *_wrapped;
+        }
+
+        T &get() const noexcept
+        {
+            return *_wrapped;
+        }
+
+    private:
+        T *_wrapped;
+    };
+
+    template <typename T>
+    reference_wrapper(reference_wrapper<T>) -> reference_wrapper<T>;
+
+    template <typename T>
+    std::reference_wrapper<T> ref(T &t) noexcept
+    {
+        return std::reference_wrapper<T>{t};
+    }
+
+    template <typename T>
+    std::reference_wrapper<T> ref(std::reference_wrapper<T> wrap) noexcept
+    {
+        return ref(wrap.get());
+    }
+
+    template <typename T>
+    void ref(const T &&) = delete;
+
+    template <typename T>
+    std::reference_wrapper<T> cref(T &t) noexcept
+    {
+        return std::reference_wrapper<const T>{t};
+    }
+
+    template <typename T>
+    std::reference_wrapper<T> cref(std::reference_wrapper<T> wrap) noexcept
+    {
+        return cref(wrap.get());
+    }
+
+    template <typename T>
+    void cref(const T &&) = delete;
+
+    namespace details
+    {
+        template <typename MemFnT, typename Cls, typename Obj, typename ...Args>
+        decltype(auto) invoke(MemFnT Cls::* f, Obj &&obj, Args &&...args)
+        {
+            return (std::forward<Obj>(obj).*f)(std::forward<Args>(args)...);
+        }
+
+        template <typename Func, typename ...Args>
+        decltype(auto) invoke(Func &&f, Args &&...args)
+        {
+            return std::forward<Func>(f)(std::forward<Args>(args)...);
+        }
+    }
+
+    template <typename Func, typename ...Args>
+    std::invoke_result_t<Func, Args...> invoke(Func &&f, Args &&...args)
+    {
+        return details::invoke(std::forward<Func>(f), std::forward<Args>(args)...);
+    }
+}
+
+#endif /* !FOR_LIBCXX_FUNCTIONAL */

@@ -849,6 +849,59 @@ namespace std
 
     template <bool cond, typename T = void>
     using enable_if_t = typename enable_if<cond, T>::type;
+
+    template <typename T>
+    class reference_wrapper;
+
+    template <typename T>
+    constexpr T &&forward(remove_reference_t<T> &t);
+
+    template <typename T>
+    constexpr T &&forward(remove_reference_t<T> &&t);
+
+    namespace details
+    {
+        /** Case for regular callable objects */
+        template <typename DecayedFunc>
+        struct do_call
+        {
+            template <typename Func, typename ...Args>
+            static auto func(Func &&f, Args &&...args) -> decltype(std::forward<Func>(f)(std::forward<Args>(args)...));
+        };
+
+        template <typename Cls, typename DecayedMemFnT>
+        struct do_call<DecayedMemFnT Cls::*>
+        {
+            template <typename MemFnT, typename Obj, typename ...Args>
+            static auto func(MemFnT Cls::*f, Obj &&obj, Args &&...args)
+            -> decltype((std::forward<Obj>(obj).*f)(std::forward<Args>(args)...));
+        };
+
+
+        template <typename Func, typename ...Args>
+        auto call(Func &&f, Args &&...args) -> decltype(do_call<std::decay_t<Func>>::func(std::forward<Func>(f),
+                                                                                          std::forward<Args>(args)...));
+
+        /** SFINAE fallback for when F is not callable with Args... */
+        template <typename, typename, typename ...>
+        struct invoke_result
+        {
+        };
+
+        template <typename Func, typename ...Args>
+        struct invoke_result<std::void_t<decltype(call(std::declval<Func>(), std::declval<Args>()...))>, Func, Args...>
+        {
+            using type = decltype(call(std::declval<Func>(), std::declval<Args>()...));
+        };
+    }
+
+    template <typename Func, typename ...Args>
+    struct invoke_result : details::invoke_result<void, Func, Args...>
+    {
+    };
+
+    template <typename Func, typename ...Args>
+    using invoke_result_t = typename invoke_result<Func, Args...>::type;
 }
 
 #endif /* !FOR_LIBCXX_TYPE_TRAITS */

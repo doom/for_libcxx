@@ -489,6 +489,61 @@ ut_test(make_unsigned)
     static_assert(std::is_same_v<std::make_unsigned_t<float>, float>);
 }
 
+void func();
+
+int func2(int, int);
+
+int &func3(float *);
+
+namespace
+{
+    struct invoke_test
+    {
+        int &func(int);
+    };
+}
+
+ut_test(invoke_result)
+{
+    using result1 = std::invoke_result_t<decltype(func)>;
+    static_assert(std::is_same_v<result1, void>);
+
+    using result2 = std::invoke_result_t<decltype(func2), int, int>;
+    static_assert(std::is_same_v<result2, int>);
+
+    using result3 = std::invoke_result_t<decltype(&func)>;
+    static_assert(std::is_same_v<result3, void>);
+
+    using result4 = std::invoke_result_t<decltype(&func2), int, int>;
+    static_assert(std::is_same_v<result4, int>);
+
+    using result5 = std::invoke_result_t<decltype(func3), float *>;
+    static_assert(std::is_same_v<result5, int &>);
+
+    using result6 = std::invoke_result_t<decltype(func2), char, char>;
+    static_assert(std::is_same_v<result6, int>);
+
+    constexpr auto l1 = [](int i) {
+        return i;
+    };
+
+    using result7 = std::invoke_result_t<decltype(l1), int>;
+    static_assert(std::is_same_v<result7, int>);
+
+    constexpr auto l2 = [](auto &&v) -> decltype(auto) {
+        return v;
+    };
+
+    using result8 = std::invoke_result_t<decltype(l2), int &>;
+    static_assert(std::is_same_v<result8, int &>);
+
+    using result9 = std::invoke_result_t<decltype(l2), const int &>;
+    static_assert(std::is_same_v<result9, const int &>);
+
+    using result10 = std::invoke_result_t<decltype(&invoke_test::func), invoke_test, int>;
+    static_assert(std::is_same_v<result10, int &>);
+}
+
 ut_group(type_traits,
          ut_get_test(integral_constant),
          ut_get_test(bool_constant),
@@ -519,6 +574,7 @@ ut_group(type_traits,
          ut_get_test(decay),
          ut_get_test(aligned_storage),
          ut_get_test(make_unsigned),
+         ut_get_test(invoke_result)
 );
 
 void run_type_traits_tests()
