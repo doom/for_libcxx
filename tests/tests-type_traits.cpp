@@ -146,6 +146,14 @@ namespace
     };
 }
 
+ut_test(is_empty)
+{
+    static_assert(!std::is_empty_v<int[]>);
+    static_assert(!std::is_empty_v<int>);
+    static_assert(!std::is_empty_v<int *>);
+    static_assert(std::is_empty_v<x>);
+}
+
 ut_test(is_integral)
 {
     static_assert(std::is_integral_v<int>);
@@ -561,6 +569,7 @@ ut_group(type_traits,
          ut_get_test(is_void),
          ut_get_test(is_pointer),
          ut_get_test(is_array),
+         ut_get_test(is_empty),
          ut_get_test(is_integral),
          ut_get_test(is_floating_point),
          ut_get_test(is_unsigned),
