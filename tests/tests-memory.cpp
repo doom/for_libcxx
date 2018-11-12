@@ -109,6 +109,24 @@ ut_test(allocator_traits)
     ut_assert_eq(alloc_trts::max_size(al), std::numeric_limits<alloc_trts::size_type>::max() / sizeof(alloc_trts::value_type));
     static_assert(std::is_same_v<alloc_trts::rebind_alloc<char>, fake_allocator<char>>);
     static_assert(std::is_same_v<alloc_trts::rebind_traits<char>, std::allocator_traits<fake_allocator<char>>>);
+
+    using default_trts = std::allocator_traits<std::allocator<int>>;
+    static_assert(std::is_same_v<default_trts::value_type, int>);
+    static_assert(std::is_same_v<default_trts::pointer, int *>);
+    static_assert(std::is_same_v<default_trts::const_pointer, const int *>);
+    static_assert(std::is_same_v<default_trts::void_pointer, void *>);
+    static_assert(std::is_same_v<default_trts::const_void_pointer, const void *>);
+    static_assert(std::is_same_v<default_trts::difference_type, std::ptrdiff_t>);
+    static_assert(std::is_same_v<default_trts::size_type, std::size_t>);
+    static_assert(default_trts::propagate_on_container_copy_assignment::value == false);
+    static_assert(default_trts::propagate_on_container_move_assignment::value == true);
+    static_assert(default_trts::propagate_on_container_swap::value == false);
+    static_assert(default_trts::is_always_equal::value == true);
+
+    std::allocator<int> al2;
+    ut_assert_eq(default_trts::max_size(al2), std::numeric_limits<default_trts::size_type>::max() / sizeof(default_trts::value_type));
+    static_assert(std::is_same_v<default_trts::rebind_alloc<char>, std::allocator<char>>);
+    static_assert(std::is_same_v<default_trts::rebind_traits<char>, std::allocator_traits<std::allocator<char>>>);
 }
 
 ut_group(memory,
