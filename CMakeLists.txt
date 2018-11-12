@@ -16,6 +16,8 @@ set(LIBCXX_SOURCES
         include/details/copy_assignable.hpp
         include/details/constexpr_cstring.hpp
         include/details/char_traits.hpp
+        include/details/detection.hpp
+        include/details/detectors.hpp
         include/cstdint
         include/cstddef
         include/climits
@@ -31,6 +33,8 @@ set(LIBCXX_SOURCES
         include/string_view
         include/charconv
         include/system_error
+        include/functional
+        include/memory
         src/dummy/dummy.cpp
         )
 
@@ -53,6 +57,8 @@ add_executable(for_libcxx-tests
         tests/tests-string_view.cpp
         tests/tests-charconv.cpp
         tests/tests-algorithm.cpp
+        tests/tests-functional.cpp
+        tests/tests-memory.cpp
         )
 
 set_target_properties(for_libcxx-tests PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")

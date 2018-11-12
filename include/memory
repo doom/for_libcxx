@@ -5,6 +5,9 @@
 #ifndef FOR_LIBCXX_MEMORY
 #define FOR_LIBCXX_MEMORY
 
+#include <details/detection.hpp>
+#include <details/detectors.hpp>
+
 namespace std
 {
     template <typename T>
@@ -15,6 +18,66 @@ namespace std
 
     template <typename T>
     const T *addressof(const T &&arg) noexcept = delete;
+
+    namespace details
+    {
+        template <typename T>
+        struct extract_template_first_arg;
+
+        template <template <typename ...> typename Template, typename T, typename ...Args>
+        struct extract_template_first_arg<Template<T, Args...>>
+        {
+            using type = T;
+        };
+
+        template <typename T, typename Replacement>
+        struct replace_template_first_arg;
+
+        template <template <typename ...> typename Template, typename T, typename ...Args, typename Replacement>
+        struct replace_template_first_arg<Template<T, Args...>, Replacement>
+        {
+            using type = Template<Replacement, Args...>;
+        };
+    }
+
+    template <typename PtrT>
+    struct pointer_traits
+    {
+        using pointer = PtrT;
+        using element_type = details::type_unless_detected_t<
+            typename details::extract_template_first_arg<PtrT>::type,
+            details::member_detector_element_type, PtrT
+        >;
+        using difference_type = details::type_unless_detected_t<
+            std::ptrdiff_t,
+            details::member_detector_difference_type,
+            PtrT
+        >;
+
+        template <typename U>
+        using rebind = typename details::replace_template_first_arg<PtrT, U>::type;
+
+        static pointer pointer_to(element_type &e)
+        {
+            return PtrT::pointer_to(e);
+        }
+    };
+
+    template <typename PointedT>
+    struct pointer_traits<PointedT *>
+    {
+        using pointer = PointedT *;
+        using element_type = PointedT;
+        using difference_type = std::ptrdiff_t;
+
+        template <typename U>
+        using rebind = U *;
+
+        static pointer pointer_to(element_type &e) noexcept
+        {
+            return std::addressof(e);
+        }
+    };
 }
 
 #endif /* !FOR_LIBCXX_MEMORY */
