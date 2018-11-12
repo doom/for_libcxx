@@ -5,6 +5,7 @@
 #include <ut_config.h>
 #include <memory>
 #include <type_traits>
+#include <limits>
 
 namespace
 {
@@ -63,9 +64,57 @@ ut_test(pointer_traits)
     ut_assert_eq(ptr2.ptr, &i);
 }
 
+namespace
+{
+    template <typename T>
+    struct fake_allocator
+    {
+        using value_type = T;
+        using difference_type = int;
+
+        T *allocate(size_t)
+        {
+            return &i;
+        }
+
+        void deallocate(T *, size_t)
+        {
+        }
+
+        T i;
+    };
+}
+
+ut_test(allocator_traits)
+{
+    using alloc_trts = std::allocator_traits<fake_allocator<int>>;
+
+    static_assert(std::is_same_v<alloc_trts::value_type, int>);
+    static_assert(std::is_same_v<alloc_trts::pointer, int *>);
+    static_assert(std::is_same_v<alloc_trts::const_pointer, const int *>);
+    static_assert(std::is_same_v<alloc_trts::void_pointer, void *>);
+    static_assert(std::is_same_v<alloc_trts::const_void_pointer, const void *>);
+    static_assert(std::is_same_v<alloc_trts::difference_type, int>);
+    static_assert(std::is_same_v<alloc_trts::size_type, unsigned int>);
+    static_assert(alloc_trts::propagate_on_container_copy_assignment::value == false);
+    static_assert(alloc_trts::propagate_on_container_move_assignment::value == false);
+    static_assert(alloc_trts::propagate_on_container_swap::value == false);
+    static_assert(alloc_trts::is_always_equal::value == false);
+
+    fake_allocator<int> al;
+    int *ptr = alloc_trts::allocate(al, 1, nullptr);
+    alloc_trts::construct(al, ptr, 2);
+    ut_assert_eq(*ptr, 2);
+    alloc_trts::deallocate(al, ptr, 1);
+    ut_assert_eq(alloc_trts::max_size(al), std::numeric_limits<alloc_trts::size_type>::max() / sizeof(alloc_trts::value_type));
+    static_assert(std::is_same_v<alloc_trts::rebind_alloc<char>, fake_allocator<char>>);
+    static_assert(std::is_same_v<alloc_trts::rebind_traits<char>, std::allocator_traits<fake_allocator<char>>>);
+}
+
 ut_group(memory,
          ut_get_test(addressof),
-         ut_get_test(pointer_traits)
+         ut_get_test(pointer_traits),
+         ut_get_test(allocator_traits)
 );
 
 void run_memory_tests()

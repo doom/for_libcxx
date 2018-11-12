@@ -5,6 +5,9 @@
 #ifndef FOR_LIBCXX_MEMORY
 #define FOR_LIBCXX_MEMORY
 
+#include <new>
+#include <limits>
+#include <utility>
 #include <details/detection.hpp>
 #include <details/detectors.hpp>
 
@@ -38,6 +41,9 @@ namespace std
         {
             using type = Template<Replacement, Args...>;
         };
+
+        template <typename T, typename U>
+        using has_rebind_other_metaf = typename T::template rebind<U>::other;
     }
 
     template <typename PtrT>
@@ -76,6 +82,131 @@ namespace std
         static pointer pointer_to(element_type &e) noexcept
         {
             return std::addressof(e);
+        }
+    };
+
+    template <typename AllocatorT>
+    struct allocator_traits
+    {
+        using allocator_type = AllocatorT;
+        using value_type = typename AllocatorT::value_type;
+        using pointer = details::type_unless_detected_t<
+            value_type *,
+            details::member_detector_pointer,
+            AllocatorT
+        >;
+        using const_pointer = details::type_unless_detected_t<
+            typename pointer_traits<pointer>::template rebind<const value_type>,
+            details::member_detector_const_pointer,
+            AllocatorT
+        >;
+        using void_pointer = details::type_unless_detected_t<
+            typename pointer_traits<pointer>::template rebind<void>,
+            details::member_detector_void_pointer,
+            AllocatorT
+        >;
+        using const_void_pointer = details::type_unless_detected_t<
+            typename pointer_traits<pointer>::template rebind<const void>,
+            details::member_detector_const_void_pointer,
+            AllocatorT
+        >;
+        using difference_type = details::type_unless_detected_t<
+            typename pointer_traits<pointer>::difference_type,
+            details::member_detector_difference_type,
+            AllocatorT
+        >;
+        using size_type = details::type_unless_detected_t<
+            std::make_unsigned_t<difference_type>,
+            details::member_detector_size_type,
+            AllocatorT
+        >;
+        using propagate_on_container_copy_assignment = details::type_unless_detected_t<
+            std::false_type,
+            details::member_detector_propagate_on_container_copy_assignment,
+            AllocatorT
+        >;
+        using propagate_on_container_move_assignment = details::type_unless_detected_t<
+            std::false_type,
+            details::member_detector_propagate_on_container_move_assignment,
+            AllocatorT
+        >;
+        using propagate_on_container_swap = details::type_unless_detected_t<
+            std::false_type,
+            details::member_detector_propagate_on_container_swap,
+            AllocatorT
+        >;
+        using is_always_equal = details::type_unless_detected_t<
+            typename std::is_empty<AllocatorT>::type,
+            details::member_detector_is_always_equal,
+            AllocatorT
+        >;
+
+        template <typename U>
+        using rebind_alloc = details::type_unless_detected_t<
+            typename details::replace_template_first_arg<AllocatorT, U>::type,
+            details::has_rebind_other_metaf,
+            AllocatorT, U
+        >;
+
+        template <typename U>
+        using rebind_traits = std::allocator_traits<rebind_alloc<U>>;
+
+        [[nodiscard]] static pointer allocate(allocator_type &a, size_type n)
+        {
+            return a.allocate(n);
+        }
+
+        [[nodiscard]] static pointer allocate(allocator_type &a, size_type n, const_void_pointer hint)
+        {
+            if constexpr (details::is_detected_v<details::member_func_detector_allocate, allocator_type, size_type, const_pointer>) {
+                return a.allocate(n, hint);
+            } else {
+                return a.allocate(n);
+            }
+        }
+
+        static void deallocate(allocator_type &a, pointer p, size_type n)
+        {
+            a.deallocate(p, n);
+        }
+
+        template <typename T, typename ...Args>
+        static void construct(allocator_type &a, T *p, Args &&...args)
+        {
+            if constexpr (details::is_detected_v<details::member_func_detector_construct, allocator_type, T *, Args...>) {
+                a.construct(p, std::forward<Args>(args)...);
+            } else {
+                ::new(static_cast<void *>(p)) T(std::forward<Args>(args)...);
+            }
+        }
+
+        template <typename T>
+        static void destroy(allocator_type &a, T *p)
+        {
+            if constexpr (details::is_detected_v<details::member_func_detector_destroy, allocator_type, T *>) {
+                a.destroy(p);
+            } else {
+                p->~T();
+            }
+        }
+
+        static allocator_type select_on_container_copy_construction(const allocator_type &a)
+        {
+            if constexpr (details::is_detected_v<details::member_func_detector_select_on_container_copy_construction,
+                allocator_type>) {
+                return a.select_on_container_copy_construction();
+            } else {
+                return a;
+            }
+        }
+
+        static size_type max_size(const allocator_type &a) noexcept
+        {
+            if constexpr (details::is_detected_v<details::member_func_detector_max_size, allocator_type>) {
+                return a.max_size();
+            } else {
+                return std::numeric_limits<size_type>::max() / sizeof(value_type);
+            }
         }
     };
 }
