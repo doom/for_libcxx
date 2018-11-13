@@ -241,9 +241,8 @@ namespace
     class throw_constructible
     {
     public:
-        throw_constructible()
+        throw_constructible() noexcept(false)
         {
-            throw 1;
         }
     };
 }
@@ -282,9 +281,8 @@ namespace
     class throw_move_constructible
     {
     public:
-        throw_move_constructible(throw_move_constructible &&)
+        throw_move_constructible(throw_move_constructible &&) noexcept(false)
         {
-            throw 1;
         }
     };
 
@@ -327,9 +325,9 @@ namespace
     class throw_assignable
     {
     public:
-        throw_assignable &operator=(int)
+        throw_assignable &operator=(int) noexcept(false)
         {
-            throw 1;
+            return *this;
         }
     };
 }
@@ -371,9 +369,8 @@ namespace
     class throw_move_assignable
     {
     public:
-        throw_move_assignable &operator=(throw_move_assignable &&)
+        throw_move_assignable &operator=(throw_move_assignable &&) noexcept(false)
         {
-            throw 1;
             return *this;
         }
     };
@@ -416,7 +413,6 @@ namespace
     public:
         ~throw_destructible() noexcept(false)
         {
-            throw 1;
         }
     };
 }
