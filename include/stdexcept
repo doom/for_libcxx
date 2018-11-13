@@ -12,7 +12,7 @@ namespace std
     class logic_error : public std::exception
     {
     public:
-        logic_error(const char *) noexcept
+        explicit logic_error(const char *) noexcept
         {
         }
     };
@@ -25,6 +25,17 @@ namespace std
         const char *what() const noexcept override
         {
             return "out of range";
+        }
+    };
+
+    class length_error : public logic_error
+    {
+    public:
+        using logic_error::logic_error;
+
+        const char *what() const noexcept override
+        {
+            return "length error";
         }
     };
 }
