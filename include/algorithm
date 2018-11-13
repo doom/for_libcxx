@@ -15,6 +15,12 @@ namespace std
         return a > b ? b : a;
     }
 
+    template <typename T>
+    constexpr const T &max(const T &a, const T &b) noexcept(noexcept(a > b))
+    {
+        return a < b ? b : a;
+    }
+
     template <typename ForwardIt, typename Comparator>
     constexpr ForwardIt min_element(ForwardIt first, ForwardIt last, Comparator cmp) noexcept
     {
