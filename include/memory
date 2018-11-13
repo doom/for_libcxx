@@ -5,9 +5,11 @@
 #ifndef FOR_LIBCXX_MEMORY
 #define FOR_LIBCXX_MEMORY
 
+#include <details/config.hpp>
 #include <new>
 #include <limits>
 #include <utility>
+#include <iterator>
 #include <details/detection.hpp>
 #include <details/detectors.hpp>
 
@@ -283,6 +285,43 @@ namespace std
     inline constexpr bool operator!=(const allocator<T> &a1, const allocator<U> &a2) noexcept
     {
         return !(a1 == a2);
+    }
+
+    template <typename T>
+    void destroy_at(T *p)
+    {
+        p->~T();
+    }
+
+    template <typename ForwardIt>
+    void destroy(ForwardIt first, ForwardIt last)
+    {
+        while (first != last) {
+            std::destroy_at(std::addressof(*first));
+            ++first;
+        }
+    }
+
+    template <typename InputIt, typename ForwardIt>
+    ForwardIt uninitialized_move(InputIt in_first, InputIt in_last, ForwardIt out_first)
+    {
+        using T = typename std::iterator_traits<ForwardIt>::value_type;
+        ForwardIt current = out_first;
+
+        FOR_LIBCXX_TRY {
+            while (in_first != in_last) {
+                ::new(static_cast<void *>(std::addressof(*current))) T(std::move(*in_first));
+                ++in_first;
+                ++current;
+            }
+            return current;
+        } FOR_LIBCXX_CATCH(...) {
+            while (out_first != current) {
+                out_first->~T();
+                ++out_first;
+            }
+            FOR_LIBCXX_THROW();
+        }
     }
 }
 
