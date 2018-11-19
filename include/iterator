@@ -158,6 +158,109 @@ namespace std
         iterator_type _iter;
     };
 
+    template <typename Iterator>
+    class move_iterator
+    {
+    public:
+        using iterator_type = Iterator;
+        using difference_type = typename std::iterator_traits<Iterator>::difference_type;
+        using value_type = typename std::iterator_traits<Iterator>::value_type;
+        using pointer = Iterator;
+        using reference = std::conditional_t<
+            std::is_reference_v<typename std::iterator_traits<Iterator>::reference>,
+            std::add_rvalue_reference_t<std::remove_reference_t<typename std::iterator_traits<Iterator>::reference>>,
+            typename std::iterator_traits<Iterator>::reference
+        >;
+        using iterator_category = typename std::iterator_traits<Iterator>::iterator_category;
+
+        constexpr move_iterator() noexcept(std::is_nothrow_constructible_v<iterator_type>) : _iter()
+        {
+        }
+
+        constexpr explicit move_iterator(iterator_type it)
+        noexcept(std::is_nothrow_move_constructible_v<iterator_type>) : _iter(std::move(it))
+        {
+        }
+
+        template <typename OtherIterator>
+        constexpr explicit move_iterator(const move_iterator<OtherIterator> &it)
+        noexcept(std::is_nothrow_constructible_v<Iterator, const OtherIterator &>) : _iter(it.base())
+        {
+        }
+
+        constexpr iterator_type base() const noexcept(std::is_nothrow_copy_constructible_v<iterator_type>)
+        {
+            return _iter;
+        }
+
+        constexpr reference operator*() const noexcept
+        {
+            return static_cast<reference>(*_iter);
+        }
+
+        constexpr pointer operator->() const noexcept
+        {
+            return _iter;
+        }
+
+        constexpr move_iterator &operator++() noexcept
+        {
+            ++_iter;
+            return *this;
+        }
+
+        constexpr move_iterator &operator--() noexcept
+        {
+            --_iter;
+            return *this;
+        }
+
+        constexpr move_iterator operator++(int) noexcept
+        {
+            auto ret = *this;
+            ++*this;
+            return ret;
+        }
+
+        constexpr move_iterator operator--(int) noexcept
+        {
+            auto ret = *this;
+            --*this;
+            return ret;
+        }
+
+        constexpr move_iterator operator+(difference_type n) noexcept
+        {
+            return move_iterator(_iter + n);
+        }
+
+        constexpr move_iterator operator-(difference_type n) noexcept
+        {
+            return move_iterator(_iter - n);
+        }
+
+        constexpr move_iterator &operator+=(difference_type n) noexcept
+        {
+            _iter += n;
+            return *this;
+        }
+
+        constexpr move_iterator operator-=(difference_type n) noexcept
+        {
+            _iter -= n;
+            return *this;
+        }
+
+    private:
+        iterator_type _iter;
+    };
+
+    template <typename Iterator>
+    inline constexpr std::move_iterator<Iterator> make_move_iterator(Iterator it)
+    {
+        return move_iterator<Iterator>(it);
+    }
+
     template <typename T, std::size_t Size>
     constexpr T *begin(T (&arr)[Size]) noexcept
     {
