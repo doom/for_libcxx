@@ -114,6 +114,20 @@ ut_test(add_pointer)
     static_assert(std::is_same_v<std::add_pointer_t<void (&)(int, int)>, void (&)(int, int)>);
 }
 
+ut_test(add_lvalue_reference)
+{
+    static_assert(std::is_same_v<std::add_lvalue_reference_t<int>, int &>);
+    static_assert(std::is_same_v<std::add_lvalue_reference_t<int &>, int &>);
+    static_assert(std::is_same_v<std::add_lvalue_reference_t<int &&>, int &>);
+}
+
+ut_test(add_rvalue_reference)
+{
+    static_assert(std::is_same_v<std::add_rvalue_reference_t<int>, int &&>);
+    static_assert(std::is_same_v<std::add_rvalue_reference_t<int &>, int &>);
+    static_assert(std::is_same_v<std::add_rvalue_reference_t<int &&>, int &&>);
+}
+
 ut_test(is_void)
 {
     static_assert(std::is_void_v<void>);
@@ -562,6 +576,8 @@ ut_group(type_traits,
          ut_get_test(add_const),
          ut_get_test(add_volatile),
          ut_get_test(add_pointer),
+         ut_get_test(add_lvalue_reference),
+         ut_get_test(add_rvalue_reference),
          ut_get_test(is_void),
          ut_get_test(is_pointer),
          ut_get_test(is_array),
