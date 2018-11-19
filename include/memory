@@ -323,6 +323,128 @@ namespace std
             FOR_LIBCXX_THROW();
         }
     }
+
+    template <typename ForwardIt, typename U>
+    void uninitialized_fill(ForwardIt out_first, ForwardIt out_last, const U &value)
+    {
+        using T = typename std::iterator_traits<ForwardIt>::value_type;
+        ForwardIt current = out_first;
+
+        FOR_LIBCXX_TRY {
+            while (current != out_last) {
+                ::new(static_cast<void *>(std::addressof(*current))) T(value);
+                ++current;
+            }
+        } FOR_LIBCXX_CATCH(...) {
+            while (out_first != current) {
+                out_first->~Value();
+                ++out_first;
+            }
+            FOR_LIBCXX_THROW();
+        }
+    }
+
+    namespace details
+    {
+        template <typename ForwardIt, typename Allocator>
+        void destroy_a(ForwardIt first, ForwardIt last, Allocator &alloc)
+        {
+            using alloc_traits = std::allocator_traits<Allocator>;
+
+            while (first != last) {
+                alloc_traits::destroy(alloc, std::addressof(*first));
+                ++first;
+            }
+        }
+
+        template <typename InputIt, typename ForwardIt, typename Allocator>
+        ForwardIt uninitialized_move_a(InputIt in_first, InputIt in_last, ForwardIt out_first, Allocator &alloc)
+        {
+            using alloc_traits = std::allocator_traits<Allocator>;
+            using T = typename std::iterator_traits<ForwardIt>::value_type;
+            ForwardIt current = out_first;
+
+            FOR_LIBCXX_TRY {
+                while (in_first != in_last) {
+                    alloc_traits::construct(alloc, std::addressof(*current), std::move(*in_first));
+                    ++in_first;
+                    ++current;
+                }
+                return current;
+            } FOR_LIBCXX_CATCH(...) {
+                while (out_first != current) {
+                    alloc_traits::destroy(alloc, std::addressof(*current));
+                    ++out_first;
+                }
+                FOR_LIBCXX_THROW();
+            }
+        }
+
+        template <typename InputIt, typename ForwardIt, typename Allocator>
+        ForwardIt uninitialized_copy_a(InputIt in_first, InputIt in_last, ForwardIt out_first, Allocator &alloc)
+        {
+            using alloc_traits = std::allocator_traits<Allocator>;
+            using T = typename std::iterator_traits<ForwardIt>::value_type;
+            ForwardIt current = out_first;
+
+            FOR_LIBCXX_TRY {
+                while (in_first != in_last) {
+                    alloc_traits::construct(alloc, std::addressof(*current), *in_first);
+                    ++in_first;
+                    ++current;
+                }
+                return current;
+            } FOR_LIBCXX_CATCH(...) {
+                while (out_first != current) {
+                    alloc_traits::destroy(alloc, std::addressof(*current));
+                    ++out_first;
+                }
+                FOR_LIBCXX_THROW();
+            }
+        }
+
+        template <typename ForwardIt, typename U, typename Allocator>
+        void uninitialized_fill_a(ForwardIt out_first, ForwardIt out_last, const U &value, Allocator &alloc)
+        {
+            using alloc_traits = std::allocator_traits<Allocator>;
+            using T = typename std::iterator_traits<ForwardIt>::value_type;
+            ForwardIt current = out_first;
+
+            FOR_LIBCXX_TRY {
+                while (current != out_last) {
+                    alloc_traits::construct(alloc, std::addressof(*current), value);
+                    ++current;
+                }
+            } FOR_LIBCXX_CATCH(...) {
+                while (out_first != current) {
+                    alloc_traits::destroy(alloc, std::addressof(*current));
+                    ++out_first;
+                }
+                FOR_LIBCXX_THROW();
+            }
+        }
+
+        template <typename ForwardIt, typename Allocator>
+        void uninitialized_default_construct_a(ForwardIt out_first, ForwardIt out_last, Allocator &alloc)
+        {
+            using alloc_traits = std::allocator_traits<Allocator>;
+            using T = typename std::iterator_traits<ForwardIt>::value_type;
+            ForwardIt current = out_first;
+
+            FOR_LIBCXX_TRY {
+                while (current != out_last) {
+                    alloc_traits::construct(alloc, std::addressof(*current));
+                    ++current;
+                }
+            } FOR_LIBCXX_CATCH(...) {
+                while (out_first != current) {
+                    alloc_traits::destroy(alloc, std::addressof(*current));
+                    ++out_first;
+                }
+                FOR_LIBCXX_THROW();
+            }
+        }
+    }
 }
 
 #endif /* !FOR_LIBCXX_MEMORY */
