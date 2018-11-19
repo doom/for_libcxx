@@ -190,6 +190,18 @@ ut_test(none_of)
     ut_assert(r3);
 }
 
+ut_test(copy)
+{
+    int arr[5] = {1, 2, 3, 4, 5};
+    int arr2[5];
+
+    std::copy(std::begin(arr), std::end(arr), std::begin(arr2));
+    std::size_t i = 0;
+    for (const auto &cur : arr2) {
+        ut_assert_eq(cur, arr[i++]);
+    }
+}
+
 ut_test(transform)
 {
     constexpr std::string_view s{"salut"};
@@ -227,6 +239,7 @@ ut_group(algorithm,
          ut_get_test(all_of),
          ut_get_test(any_of),
          ut_get_test(none_of),
+         ut_get_test(copy),
          ut_get_test(transform)
 );
 

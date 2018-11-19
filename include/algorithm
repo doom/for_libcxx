@@ -166,6 +166,19 @@ namespace std
         });
     }
 
+    template <typename InputIt, typename OutputIt>
+    constexpr OutputIt copy(InputIt in_first, InputIt in_last, OutputIt out_first)
+    {
+        //TODO: optimize using memmove for trivially copyable types
+
+        while (in_first != in_last) {
+            *out_first = *in_first;
+            ++out_first;
+            ++in_first;
+        }
+        return out_first;
+    }
+
     template <typename InputIt, typename OutputIt, typename UnaryOperation>
     constexpr OutputIt transform(InputIt in_first, InputIt in_last, OutputIt out_first, UnaryOperation f)
     {
