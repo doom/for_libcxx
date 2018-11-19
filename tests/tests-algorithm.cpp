@@ -44,6 +44,61 @@ ut_test(max_element)
     ut_assert_eq(it4, std::begin(arr1));
 }
 
+namespace
+{
+    namespace tests
+    {
+        class not_swappable
+        {
+        public:
+            explicit not_swappable(int data) noexcept : _data(data)
+            {
+            }
+
+            not_swappable(const not_swappable &) noexcept = default;
+
+            not_swappable &operator=(const not_swappable &) noexcept = default;
+
+            not_swappable(not_swappable &&) noexcept = delete;
+
+            not_swappable &operator=(not_swappable &&) noexcept = delete;
+
+            int data() const
+            {
+                return _data;
+            }
+
+        private:
+            int _data;
+        };
+
+        void swap(not_swappable &a, not_swappable &b)
+        {
+            auto tmp = a;
+
+            a = b;
+            b = tmp;
+        }
+    }
+}
+
+ut_test(swap)
+{
+    using std::swap;
+
+    int a = 0;
+    int b = 1;
+    swap(a, b);
+    ut_assert_eq(a, 1);
+    ut_assert_eq(b, 0);
+
+    tests::not_swappable nsa(0);
+    tests::not_swappable nsb(1);
+    swap(nsa, nsb);
+    ut_assert_eq(nsa.data(), 1);
+    ut_assert_eq(nsb.data(), 0);
+}
+
 ut_test(for_each)
 {
     int arr1[] = {2, 3, 4, 2, 1, 9};
@@ -166,6 +221,7 @@ ut_test(transform)
 ut_group(algorithm,
          ut_get_test(min_element),
          ut_get_test(max_element),
+         ut_get_test(swap),
          ut_get_test(for_each),
          ut_get_test(find_if),
          ut_get_test(all_of),
