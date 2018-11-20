@@ -13,6 +13,7 @@ void run_charconv_tests();
 void run_algorithm_tests();
 void run_functional_tests();
 void run_memory_tests();
+void run_vector_tests();
 
 int main()
 {
@@ -27,4 +28,5 @@ int main()
     run_algorithm_tests();
     run_functional_tests();
     run_memory_tests();
+    run_vector_tests();
 }

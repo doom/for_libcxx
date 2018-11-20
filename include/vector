@@ -1,0 +1,483 @@
+/*
+** Created by doom on 11/11/18.
+*/
+
+#ifndef FOR_LIBCXX_VECTOR
+#define FOR_LIBCXX_VECTOR
+
+#include <details/config.hpp>
+#include <cstddef>
+#include <type_traits>
+#include <memory>
+#include <utility>
+#include <iterator>
+#include <algorithm>
+#include <stdexcept>
+
+namespace std
+{
+    namespace details
+    {
+        template <typename IteratorT>
+        inline constexpr auto make_move_iterator_if_nothrow_assign(IteratorT it) noexcept
+        {
+            using value_type = typename std::iterator_traits<IteratorT>::value_type;
+
+            if constexpr (std::is_nothrow_move_assignable_v<value_type>) {
+                return std::make_move_iterator(it);
+            } else {
+                return it;
+            }
+        }
+    }
+
+    template <typename T, typename Allocator = std::allocator<T>>
+    class vector : private Allocator
+    {
+    public:
+        static_assert(std::is_same_v<typename Allocator::value_type, T>,
+                      "the allocator's value type must match the container's value type");
+
+        using value_type = T;
+        using allocator_type = Allocator;
+        using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
+        using reference = value_type &;
+        using const_reference = const value_type &;
+        using pointer = typename std::allocator_traits<allocator_type>::pointer;
+        using const_pointer = typename std::allocator_traits<allocator_type>::const_pointer;
+        using iterator = pointer;
+        using const_iterator = const_pointer;
+        using reverse_iterator = std::reverse_iterator<iterator>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+    private:
+        using allocator_traits = std::allocator_traits<allocator_type>;
+
+        pointer _buffer;
+        std::size_t _capacity;
+        std::size_t _size;
+
+        allocator_type &_allocator() noexcept
+        {
+            return *static_cast<allocator_type *>(this);
+        }
+
+        const allocator_type &_allocator() const noexcept
+        {
+            return *static_cast<const allocator_type *>(this);
+        }
+
+        void _destroy_elements(iterator first, iterator last) noexcept
+        {
+            while (first != last) {
+                allocator_traits::destroy(_allocator(), first);
+                ++first;
+            }
+        }
+
+    public:
+        iterator begin() noexcept
+        {
+            return _buffer;
+        }
+
+        iterator end() noexcept
+        {
+            return _buffer + _size;
+        }
+
+        const_iterator begin() const noexcept
+        {
+            return _buffer;
+        }
+
+        const_iterator end() const noexcept
+        {
+            return _buffer + _size;
+        }
+
+        const_iterator cbegin() const noexcept
+        {
+            return _buffer;
+        }
+
+        const_iterator cend() const noexcept
+        {
+            return _buffer + _size;
+        }
+
+        size_type size() const noexcept
+        {
+            return _size;
+        }
+
+        size_type capacity() const noexcept
+        {
+            return _capacity;
+        }
+
+        bool empty() const noexcept
+        {
+            return size() == 0;
+        }
+
+        size_type max_size() const noexcept
+        {
+            return std::numeric_limits<size_type>::max() - 1;
+        }
+
+        allocator_type get_allocator() const
+        {
+            return _allocator();
+        }
+
+        reference front() noexcept
+        {
+            return *_buffer;
+        }
+
+        const_reference front() const noexcept
+        {
+            return *_buffer;
+        }
+
+        reference back() noexcept
+        {
+            return *(_buffer + _size - 1);
+        }
+
+        const_reference back() const noexcept
+        {
+            return *(_buffer + _size - 1);
+        }
+
+        reference operator[](size_type pos) noexcept
+        {
+            return _buffer[pos];
+        }
+
+        const_reference operator[](size_type pos) const noexcept
+        {
+            return _buffer[pos];
+        }
+
+        reference at(size_type pos)
+        {
+            if (pos >= _size) {
+                FOR_LIBCXX_THROW(std::out_of_range("std::vector::at: out of range"));
+            }
+            return _buffer[pos];
+        }
+
+        const_reference at(size_type pos) const
+        {
+            if (pos >= _size) {
+                FOR_LIBCXX_THROW(std::out_of_range("std::vector::at: out of range"));
+            }
+            return _buffer[pos];
+        }
+
+        pointer data() noexcept
+        {
+            return _buffer;
+        }
+
+        const_pointer data() const noexcept
+        {
+            return _buffer;
+        }
+
+    private:
+        void _grow_to(size_type to)
+        {
+            pointer new_buffer = allocator_traits::allocate(_allocator(), to);
+
+            if (_size > 0) {
+                std::details::uninitialized_move_a(begin(), end(), new_buffer, _allocator());
+                _destroy_elements(begin(), end());
+                allocator_traits::deallocate(_allocator(), _buffer, _capacity);
+            }
+
+            _buffer = new_buffer;
+            _capacity = to;
+        }
+
+    public:
+        void reserve(size_type nb_elements)
+        {
+            if (nb_elements > max_size()) {
+                FOR_LIBCXX_THROW(std::length_error());
+            }
+            if (nb_elements > capacity()) {
+                _grow_to(std::max(nb_elements, capacity() * 2));
+            }
+        }
+
+        vector() noexcept(noexcept(allocator_type())) : _buffer(nullptr), _capacity(0), _size(0)
+        {
+        }
+
+        explicit vector(const Allocator &alloc) noexcept : allocator_type(alloc),
+                                                           _buffer(nullptr), _capacity(0), _size(0)
+        {
+        }
+
+        vector(size_type count, const T &value, const Allocator &alloc = Allocator()) :
+            allocator_type(alloc),
+            _buffer(allocator_traits::allocate(_allocator(), count)),
+            _size(count), _capacity(count)
+        {
+            std::details::uninitialized_fill_a(begin(), end(), value, _allocator());
+        }
+
+        explicit vector(size_type count, const Allocator &alloc = Allocator()) :
+            allocator_type(alloc),
+            _buffer(allocator_traits::allocate(_allocator(), count)),
+            _size(count), _capacity(count)
+        {
+            std::details::uninitialized_default_construct_a(begin(), end(), _allocator());
+        }
+
+        vector(vector &&other) noexcept : allocator_type(std::move(other._allocator())),
+                                          _buffer(other._buffer), _capacity(other._capacity), _size(other._size)
+        {
+            other._buffer = nullptr;
+            other._capacity = 0;
+            other._size = 0;
+        }
+
+        vector(const vector &other, const Allocator &allocator) noexcept :
+            allocator_type(allocator),
+            _buffer(allocator_traits::allocate(_allocator(), other._size)),
+            _capacity(other._size),
+            _size(other._size)
+        {
+            std::details::uninitialized_copy_a(other.begin(), other.end(),
+                                               begin(),
+                                               _allocator());
+        }
+
+        vector(const vector &other) noexcept :
+            vector(other,
+                   std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator()))
+        {
+        }
+
+        iterator erase(const_iterator cfirst, const_iterator clast)
+        {
+            auto first = begin() + (cfirst - cbegin());
+            auto last = begin() + (clast - cbegin());
+            size_t nb_erased = first - last;
+
+            _destroy_elements(first, last);
+            _size -= nb_erased;
+            return last;
+        }
+
+        iterator erase(const_iterator first)
+        {
+            return erase(first, end());
+        }
+
+    private:
+        template <typename InputIt>
+        void _assign_impl(InputIt first, InputIt last, std::input_iterator_tag)
+        {
+            auto cur = begin();
+
+            while (first != last && cur < end()) {
+                *cur = *first;
+                ++cur;
+                ++first;
+            }
+            if (first == last) {
+                erase(cur, end());
+            } else {
+                while (first != last) {
+                    push_back(*first);
+                }
+            }
+        }
+
+    public:
+        template <typename InputIt>
+        void assign(InputIt first, InputIt last)
+        {
+            using category = typename std::iterator_traits<InputIt>::iterator_category;
+
+            // TODO: implement optimizations for adequate iterator categories
+            _assign_impl(first, last, category{});
+        }
+
+    private:
+        void _move_assign_by_swapping(vector &&other) noexcept
+        {
+            if constexpr (allocator_traits::propagate_on_container_move_assignment::value) {
+                _allocator() = std::move(other._allocator());
+            }
+            std::swap(_buffer, other._buffer);
+            std::swap(_capacity, other._capacity);
+            std::swap(_size, other._size);
+        }
+
+        void _move_assign_by_assign(vector &&other) noexcept
+        {
+            assign(details::make_move_iterator_if_nothrow_assign(other.begin()),
+                   details::make_move_iterator_if_nothrow_assign(other.end()));
+        }
+
+    public:
+        vector &operator=(vector &&other)
+        noexcept(allocator_traits::propagate_on_container_move_assignment::value
+                 || allocator_traits::is_always_equal::value)
+        {
+            if (this != &other) {
+                if constexpr (allocator_traits::propagate_on_container_move_assignment::value
+                              || allocator_traits::is_always_equal::value) {
+                    _move_assign_by_swapping(std::move(other));
+                } else {
+                    if (_allocator() == other._allocator()) {
+                        _move_assign_by_swapping(std::move(other));
+                    } else {
+                        _move_assign_by_assign(std::move(other));
+                        other.clear();
+                    }
+                }
+            }
+            return *this;
+        }
+
+        vector &operator=(const vector &other)
+        {
+            if (this != &other) {
+                if constexpr (allocator_traits::propagate_on_container_copy_assignment::value) {
+                    /** If the other's allocator propagates, we need to propagate it to this */
+                    if constexpr (!allocator_traits::is_always_equal::value) {
+                        if (_allocator() != other._allocator()) {
+                            /** If the allocator is not equal, we need to deallocate the allocated memory first */
+                            clear();
+                            allocator_traits::deallocate(_allocator(), _buffer, _capacity);
+                            _capacity = 0;
+                            _size = 0;
+                            _buffer = nullptr;
+                        }
+                    }
+                    _allocator() = other._allocator();
+                }
+                if (other.size() <= capacity()) {
+                    /** If this has enough storage for other's elements */
+
+                    if (size() >= other.size()) {
+                        /** If this' size is greater than other's, we need to copy then destroy extra elements */
+                        auto end_it = std::copy(other.begin(), other.end(), begin());
+                        details::destroy_a(end_it, end(), _allocator());
+                    } else {
+                        /** Otherwise we need to copy then uninitialized_copy the remaining elements*/
+                        auto end_it = std::copy(other.begin(), other.begin() + size(), begin());
+                        details::uninitialized_copy_a(other.begin() + size(), other.end(), end_it, _allocator());
+                    }
+                } else {
+                    /** Otherwise, reserve, then copy to existing elements, then uninitialized_copy the rest */
+                    reserve(other.size());
+                    auto end_it = std::copy(other.begin(), other.begin() + size(), begin());
+                    details::uninitialized_copy_a(other.begin() + size(), other.end(), end_it, _allocator());
+                }
+                _size = other._size;
+            }
+            return *this;
+        }
+
+        ~vector() noexcept
+        {
+            if (_capacity > 0) {
+                _destroy_elements(begin(), end());
+                allocator_traits::deallocate(_allocator(), _buffer, _capacity);
+            }
+        }
+
+        void clear() noexcept
+        {
+            erase(begin(), end());
+        }
+
+        void shrink_to_fit() noexcept
+        {
+        }
+
+        void push_back(const T &value)
+        {
+            reserve(_size + 1);
+            allocator_traits::construct(_allocator(), &_buffer[_size], value);
+            ++_size;
+        }
+
+        void push_back(T &&value)
+        {
+            reserve(_size + 1);
+            allocator_traits::construct(_allocator(), &_buffer[_size], std::move(value));
+            ++_size;
+        }
+
+        template <typename ...Args>
+        reference emplace_back(Args &&...args)
+        {
+            reserve(_size + 1);
+            allocator_traits::construct(_allocator(), &_buffer[_size], std::forward<Args>(args)...);
+            ++_size;
+            return back();
+        }
+
+        void pop_back() noexcept
+        {
+            allocator_traits::destroy(_allocator(), &back());
+            --_size;
+        }
+
+        iterator insert(const_iterator pos, const T &value)
+        {
+            auto it = begin() + (pos - cbegin());
+
+            if (pos == end()) {
+                push_back(value);
+                return it;
+            }
+
+            reserve(_size + 1);
+
+            /** We shift to the right
+             * - first, we move-construct the last element (because it goes to uninitialized storage)
+             * - then, we move-assign the other elements
+             */
+            allocator_traits::construct(_allocator(), &_buffer[_size], std::move(back()));
+            std::move_backward(it, _buffer + _size - 2, _buffer + _size - 1);
+            *it = value;
+            ++_size;
+            return it;
+        }
+
+        iterator insert(const_iterator pos, T &&value)
+        {
+            auto it = begin() + (pos - cbegin());
+
+            if (pos == end()) {
+                push_back(std::move(value));
+                return it;
+            }
+
+            reserve(_size + 1);
+
+            /** We shift to the right
+             * - first, we move-construct the last element (because it goes to uninitialized storage)
+             * - then, we move-assign the other elements
+             */
+            allocator_traits::construct(_allocator(), &_buffer[_size], std::move(back()));
+            std::move_backward(it, _buffer + _size - 1, _buffer + _size);
+            *it = std::move(value);
+            ++_size;
+            return it;
+        }
+    };
+}
+
+#endif /* !FOR_LIBCXX_VECTOR */

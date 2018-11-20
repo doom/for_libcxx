@@ -36,6 +36,7 @@ set(LIBCXX_SOURCES
         include/functional
         include/memory
         include/limits
+        include/vector
         src/dummy/dummy.cpp
         )
 
@@ -60,6 +61,7 @@ add_executable(for_libcxx-tests
         tests/tests-algorithm.cpp
         tests/tests-functional.cpp
         tests/tests-memory.cpp
+        tests/tests-vector.cpp
         )
 
 set_target_properties(for_libcxx-tests PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
