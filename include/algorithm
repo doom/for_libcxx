@@ -179,6 +179,28 @@ namespace std
         return out_first;
     }
 
+    template <typename InputIt, typename OutputIt>
+    constexpr OutputIt move(InputIt in_first, InputIt in_last, OutputIt out_first)
+    {
+        while (in_first != in_last) {
+            *out_first = std::move(*in_first);
+            ++out_first;
+            ++in_first;
+        }
+        return out_first;
+    }
+
+    template <typename InputIt, typename OutputIt>
+    constexpr OutputIt move_backward(InputIt in_first, InputIt in_last, OutputIt out_last)
+    {
+        while (in_first != in_last) {
+            --out_last;
+            --in_last;
+            *out_last = std::move(*in_last);
+        }
+        return out_last;
+    }
+
     template <typename InputIt, typename OutputIt, typename UnaryOperation>
     constexpr OutputIt transform(InputIt in_first, InputIt in_last, OutputIt out_first, UnaryOperation f)
     {

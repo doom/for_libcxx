@@ -380,6 +380,22 @@ namespace std
             }
         }
 
+        template <typename InputIt, typename OutputIt, typename Allocator>
+        OutputIt uninitialized_move_backward_a(InputIt in_first, InputIt in_last, OutputIt out_last, Allocator &alloc)
+        {
+            using alloc_traits = std::allocator_traits<Allocator>;
+            using T = typename std::iterator_traits<OutputIt>::value_type;
+            OutputIt current = out_last;
+
+            while (in_first != in_last) {
+                --in_last;
+                --current;
+                alloc_traits::construct(alloc, std::addressof(*current), std::move(*in_last));
+            }
+            //TODO: handle exceptions
+            return current;
+        }
+
         template <typename InputIt, typename ForwardIt, typename Allocator>
         ForwardIt uninitialized_copy_a(InputIt in_first, InputIt in_last, ForwardIt out_first, Allocator &alloc)
         {
