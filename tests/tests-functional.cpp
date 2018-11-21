@@ -29,9 +29,23 @@ ut_test(invoke)
     ut_assert_eq(i, 2);
 }
 
+ut_test(less)
+{
+    std::less<int> li;
+    static_assert(li(1, 2));
+    static_assert(!li(2, 1));
+    static_assert(!li(2, 2));
+
+    std::less<void> lv;
+    static_assert(lv(1, 2));
+    static_assert(!lv(2, 1));
+    static_assert(!lv(2, 2));
+}
+
 ut_group(functional,
          ut_get_test(reference_wrapper),
-         ut_get_test(invoke)
+         ut_get_test(invoke),
+         ut_get_test(less)
 );
 
 void run_functional_tests()

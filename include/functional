@@ -92,6 +92,28 @@ namespace std
     {
         return details::invoke(std::forward<Func>(f), std::forward<Args>(args)...);
     }
+
+    template <typename T = void>
+    struct less;
+
+    template <typename T>
+    struct less
+    {
+        constexpr bool operator()(const T &a, const T &b) const
+        {
+            return a < b;
+        }
+    };
+
+    template <>
+    struct less<void>
+    {
+        template <typename T, typename U>
+        constexpr auto operator()(T &&a, U &&b) const -> decltype(std::forward<T>(a) < std::forward<U>(b))
+        {
+            return std::forward<T>(a) < std::forward<U>(b);
+        }
+    };
 }
 
 #endif /* !FOR_LIBCXX_FUNCTIONAL */
