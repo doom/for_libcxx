@@ -5,6 +5,7 @@
 #ifndef FOR_LIBCXX_UTILITY
 #define FOR_LIBCXX_UTILITY
 
+#include <cstddef>
 #include <type_traits>
 
 namespace std
@@ -36,6 +37,24 @@ namespace std
     };
 
     inline constexpr in_place_t in_place{};
+
+    template <typename T, T ...Ints>
+    class integer_sequence
+    {
+        static constexpr std::size_t size() noexcept
+        {
+            return sizeof...(Ints);
+        }
+    };
+
+    template <std::size_t ...Ints>
+    using index_sequence = std::integer_sequence<std::size_t, Ints...>;
+
+    template <typename T, T N>
+    using make_integer_sequence = std::integer_sequence<T, __integer_pack(N)...>;
+
+    template <std::size_t N>
+    using make_index_sequence = make_integer_sequence<std::size_t, N>;
 }
 
 #endif /* !FOR_LIBCXX_UTILITY */
