@@ -449,6 +449,31 @@ ut_test(is_destructible)
 
 namespace
 {
+    struct convertible_from_int
+    {
+        convertible_from_int(int)
+        {
+        }
+    };
+
+    struct explicitely_convertible_from_int
+    {
+        explicitely_convertible_from_int(int)
+        {
+        }
+    };
+}
+
+ut_test(is_convertible)
+{
+    static_assert(std::is_convertible_v<int, int>);
+    static_assert(std::is_convertible_v<int, convertible_from_int>);
+    static_assert(!std::is_convertible_v<destructible, throw_destructible>);
+    static_assert(std::is_convertible_v<int, explicitely_convertible_from_int>);
+}
+
+namespace
+{
     struct dummy_struct
     {
         double d;
@@ -591,6 +616,7 @@ ut_group(type_traits,
          ut_get_test(is_assignable),
          ut_get_test(is_move_assignable),
          ut_get_test(is_destructible),
+         ut_get_test(is_convertible),
          ut_get_test(conditional),
          ut_get_test(decay),
          ut_get_test(aligned_storage),

@@ -658,6 +658,14 @@ namespace std
     template <typename T, typename ...Args>
     inline constexpr const bool is_constructible_v = is_constructible<T, Args...>::value;
 
+    template <typename T>
+    struct is_default_constructible : is_constructible<T>
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool is_default_constructible_v = is_constructible_v<T>;
+
     template <typename T, typename... Args>
     struct is_trivially_constructible : bool_constant<is_constructible<T, Args...>::value
                                                       && __is_trivially_constructible(T, Args...)>
@@ -867,6 +875,31 @@ namespace std
 
     template <typename T>
     inline constexpr const bool is_nothrow_destructible_v = is_nothrow_destructible<T>::value;
+
+    namespace details
+    {
+        template <typename From, typename To>
+        struct is_convertible_helper
+        {
+            template <typename T>
+            static void test2(T);
+
+            template <typename F = From, typename T = To, typename = decltype(test2<T>(std::declval<const F &>()))>
+            static std::true_type test(int);
+
+            static std::false_type test(...);
+
+            using type = decltype(test(0));
+        };
+    }
+
+    template <class From, class To>
+    struct is_convertible : details::is_convertible_helper<From, To>::type
+    {
+    };
+
+    template <typename From, typename To>
+    inline constexpr const bool is_convertible_v = is_convertible<From, To>::value;
 
     template <std::size_t Size, std::size_t Align>
     struct aligned_storage
