@@ -979,6 +979,31 @@ namespace std
 
     template <typename Func, typename ...Args>
     using invoke_result_t = typename invoke_result<Func, Args...>::type;
+
+    namespace details
+    {
+        template <typename, typename Func, typename ...Args>
+        struct is_invocable : std::false_type
+        {
+        };
+
+        template <typename Func, typename ...Args>
+        struct is_invocable<
+            std::void_t<decltype(details::call(std::declval<Func>(), std::declval<Args>()...))>,
+            Func,
+            Args...
+        > : std::true_type
+        {
+        };
+    }
+
+    template <typename Func, typename ...Args>
+    struct is_invocable : details::is_invocable<void, Func, Args...>
+    {
+    };
+
+    template <typename Func, typename ...Arg>
+    inline constexpr bool is_invocable_v = std::is_invocable<Func, Arg...>::value;
 }
 
 #endif /* !FOR_LIBCXX_TYPE_TRAITS */

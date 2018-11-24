@@ -587,6 +587,41 @@ ut_test(invoke_result)
     static_assert(std::is_same_v<result10, int &>);
 }
 
+ut_test(is_invocable)
+{
+    static_assert(std::is_invocable_v<decltype(func)>);
+
+    static_assert(std::is_invocable_v<decltype(func2), int, int>);
+
+    static_assert(!std::is_invocable_v<decltype(func2), int>);
+
+    static_assert(std::is_invocable_v<decltype(&func)>);
+
+    static_assert(std::is_invocable_v<decltype(&func2), int, int>);
+
+    static_assert(std::is_invocable_v<decltype(func3), float *>);
+
+    static_assert(!std::is_invocable_v<decltype(func3), int *>);
+
+    static_assert(std::is_invocable_v<decltype(func2), char, char>);
+
+    constexpr auto l1 = [](int i) {
+        return i;
+    };
+
+    static_assert(std::is_invocable_v<decltype(l1), int>);
+
+    constexpr auto l2 = [](auto &&v) -> decltype(auto) {
+        return v;
+    };
+
+    static_assert(std::is_invocable_v<decltype(l2), int &>);
+
+    static_assert(std::is_invocable_v<decltype(l2), const int &>);
+
+    static_assert(std::is_invocable_v<decltype(&invoke_test::func), invoke_test, int>);
+}
+
 ut_group(type_traits,
          ut_get_test(integral_constant),
          ut_get_test(bool_constant),
@@ -621,7 +656,8 @@ ut_group(type_traits,
          ut_get_test(decay),
          ut_get_test(aligned_storage),
          ut_get_test(make_unsigned),
-         ut_get_test(invoke_result)
+         ut_get_test(invoke_result),
+         ut_get_test(is_invocable)
 );
 
 void run_type_traits_tests()
