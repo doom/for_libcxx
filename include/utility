@@ -50,11 +50,46 @@ namespace std
     template <std::size_t ...Ints>
     using index_sequence = std::integer_sequence<std::size_t, Ints...>;
 
+    namespace details
+    {
+        template <typename Seq1, typename Seq2>
+        struct concat_iseqs;
+
+        template <std::size_t ...Seq1Values, std::size_t ...Seq2Values>
+        struct concat_iseqs<std::index_sequence<Seq1Values...>, std::index_sequence<Seq2Values...>>
+        {
+            using type = std::index_sequence<Seq1Values..., (sizeof...(Seq1Values) + Seq2Values)...>;
+        };
+
+        template <std::size_t Max>
+        struct make_iseq : concat_iseqs<
+            typename make_iseq<Max / 2>::type,
+            typename make_iseq<Max - (Max / 2)>::type
+        >
+        {
+        };
+
+        template <>
+        struct make_iseq<1>
+        {
+            using type = std::index_sequence<0>;
+        };
+
+        template <typename FromT, typename ToT>
+        struct iseq_cast;
+
+        template <typename FromT, FromT ...Values, typename ToT>
+        struct iseq_cast<std::integer_sequence<FromT, Values...>, ToT>
+        {
+            using type = std::integer_sequence<ToT, Values...>;
+        };
+    }
+
     template <typename T, T N>
-    using make_integer_sequence = std::integer_sequence<T, __integer_pack(N)...>;
+    using make_integer_sequence = typename details::iseq_cast<typename details::make_iseq<N>::type, T>::type;
 
     template <std::size_t N>
-    using make_index_sequence = make_integer_sequence<std::size_t, N>;
+    using make_index_sequence = typename details::make_iseq<N>::type;
 }
 
 #endif /* !FOR_LIBCXX_UTILITY */
