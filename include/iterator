@@ -272,6 +272,18 @@ namespace std
     {
         return arr + Size;
     }
+
+    template <typename T>
+    inline constexpr auto cbegin(const T &t) noexcept(noexcept(std::begin(t))) -> decltype(std::begin(t))
+    {
+        return std::begin(t);
+    }
+
+    template <typename T>
+    inline constexpr auto cend(const T &t) noexcept(noexcept(std::end(t))) -> decltype(std::end(t))
+    {
+        return std::end(t);
+    }
 }
 
 #endif /* !FOR_LIBCXX_ITERATOR */
