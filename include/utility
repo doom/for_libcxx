@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <type_traits>
 #include <details/move_and_forward.hpp>
+#include <details/more_type_traits.hpp>
+#include <algorithm>
 
 namespace std
 {
@@ -73,6 +75,226 @@ namespace std
 
     template <std::size_t N>
     using make_index_sequence = typename details::make_iseq<N>::type;
+
+    template <typename T1, typename T2>
+    class pair
+    {
+    public:
+        using first_type = T1;
+        using second_type = T2;
+
+        T1 first;
+        T2 second;
+
+        template <typename U1 = T1, typename U2 = T2,
+            std::more::overload_n_if<
+                std::more::is_implicitly_default_constructible_v<U1>
+                && std::more::is_implicitly_default_constructible_v<U2>> = 1
+        >
+        constexpr pair() : first(), second()
+        {
+        }
+
+        template <typename U1 = T1, typename U2 = T2,
+            std::more::overload_n_if<!(
+                std::more::is_implicitly_default_constructible_v<U1>
+                && std::more::is_implicitly_default_constructible_v<U2>)> = 2
+        >
+        explicit constexpr pair() : first(), second()
+        {
+        }
+
+        template <typename U1 = T1, typename U2 = T2,
+            typename = std::enable_if_t<std::is_copy_constructible_v<U1> && std::is_copy_constructible_v<U2>
+            >,
+            std::more::overload_n_if<std::is_convertible_v<const U1 &, T1> && std::is_convertible_v<const U2 &, T2>> = 1
+        >
+        constexpr pair(const U1 &a, const U2 &b) : first(a), second(b)
+        {
+        }
+
+        template <typename U1 = T1, typename U2 = T2,
+            typename = std::enable_if_t<std::is_copy_constructible_v<U1> && std::is_copy_constructible_v<U2>
+            >,
+            std::more::overload_n_if<!(std::is_convertible_v<const U1 &, T1> &&
+                                       std::is_convertible_v<const U2 &, T2>)> = 2
+        >
+        explicit constexpr pair(const U1 &a, const U2 &b) : first(a), second(b)
+        {
+        }
+
+        template <typename U1, typename U2,
+            typename = std::enable_if_t<std::is_constructible_v<T1, U1 &&> && std::is_constructible_v<T2, U2 &&>>,
+            std::more::overload_n_if<std::is_convertible_v<U1 &&, T1> && std::is_convertible_v<U2 &&, T2>> = 1
+        >
+        constexpr pair(U1 &&u1, U2 &&u2) : first(std::forward<U1>(u1)), second(std::forward<U2>(u2))
+        {
+        }
+
+        template <typename U1, typename U2,
+            typename = std::enable_if_t<std::is_constructible_v<T1, U1 &&> && std::is_constructible_v<T2, U2 &&>>,
+            std::more::overload_n_if<!(std::is_convertible_v<U1 &&, T1> && std::is_convertible_v<U2 &&, T2>)> = 2
+        >
+        explicit constexpr pair(U1 &&u1, U2 &&u2) : first(std::forward<U1>(u1)), second(std::forward<U2>(u2))
+        {
+        }
+
+        template <typename U1, typename U2,
+            typename = std::enable_if_t<!std::is_same_v<pair<U1, U2>, pair>>,
+            typename = std::enable_if_t<
+                std::is_constructible_v<T1, const U1 &> && std::is_constructible_v<T2, const U2 &>
+            >,
+            std::more::overload_n_if<
+                std::is_convertible_v<const U1 &, T1> && std::is_convertible_v<const U2 &, T2>
+            > = 1
+        >
+        constexpr pair(const pair<U1, U2> &p) : first(p.first), second(p.second)
+        {
+        }
+
+        template <typename U1, typename U2,
+            typename = std::enable_if_t<!std::is_same_v<pair<U1, U2>, pair>>,
+            typename = std::enable_if_t<
+                std::is_constructible_v<T1, const U1 &> && std::is_constructible_v<T2, const U2 &>
+            >,
+            std::more::overload_n_if<
+                !(std::is_convertible_v<const U1 &, T1> && std::is_convertible_v<const U2 &, T2>)
+            > = 2
+        >
+        explicit constexpr pair(const pair<U1, U2> &p) : first(p.first), second(p.second)
+        {
+        }
+
+        constexpr pair(const pair &) = default;
+
+        template <typename U1, typename U2,
+            typename = std::enable_if_t<!std::is_same_v<pair<U1, U2>, pair>>,
+            typename = std::enable_if_t<
+                std::is_constructible_v<T1, U1 &&> && std::is_constructible_v<T2, U2 &&>
+            >,
+            std::more::overload_n_if<
+                std::is_convertible_v<U1 &&, T1> && std::is_convertible_v<U2 &&, T2>
+            > = 1
+        >
+        constexpr pair(pair<U1, U2> &&p) : first(std::forward<U1>(p.first)), second(std::forward<U2>(p.second))
+        {
+        }
+
+        template <typename U1, typename U2,
+            typename = std::enable_if_t<!std::is_same_v<pair<U1, U2>, pair>>,
+            typename = std::enable_if_t<
+                std::is_constructible_v<T1, U1 &&> && std::is_constructible_v<T2, U2 &&>
+            >,
+            std::more::overload_n_if<
+                !(std::is_convertible_v<U1 &&, T1> && std::is_convertible_v<U2 &&, T2>)
+            > = 2
+        >
+        explicit constexpr pair(pair<U1, U2> &&p) : first(std::forward<U1>(p.first)), second(std::forward<U2>(p.second))
+        {
+        }
+
+        constexpr pair(pair &&pair) noexcept = default;
+
+        ~pair() noexcept = default;
+
+        pair &operator=(const pair &other) = default;
+
+        template <typename U1, typename U2,
+            typename = std::enable_if_t<!std::is_same_v<pair<U1, U2>, pair>>,
+            typename = std::enable_if_t<
+                std::is_assignable_v<T1 &, const U1 &> && std::is_assignable_v<T2 &, const U2 &>
+            >
+        >
+        pair &operator=(const pair<U1, U2> &other)
+        {
+            first = other.first;
+            second = other.second;
+            return *this;
+        }
+
+        pair &operator=(pair &&other) noexcept = default;
+
+        template <typename U1, typename U2,
+            typename = std::enable_if_t<!std::is_same_v<pair<U1, U2>, pair>>,
+            typename = std::enable_if_t<
+                std::is_assignable_v<T1 &, U1 &&> && std::is_assignable_v<T2 &, U2 &&>
+            >
+        >
+        pair &operator=(pair<U1, U2> &&other)
+        noexcept(is_nothrow_move_assignable_v<T1> && is_nothrow_move_assignable_v<T2>)
+        {
+            first = other.first;
+            second = other.second;
+            return *this;
+        }
+
+        void swap(pair &other) noexcept(noexcept(swap(first, other.first)) && noexcept(swap(second, other.second)))
+        {
+            using std::swap;
+            swap(first, other.first);
+            swap(second, other.second);
+        }
+    };
+
+    template <typename T1, typename T2>
+    constexpr bool operator==(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return lhs.first == rhs.first && lhs.second == rhs.second;
+    }
+
+    template <typename T1, typename T2>
+    constexpr bool operator!=(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return !(lhs == rhs);
+    }
+
+    template <typename T1, typename T2>
+    constexpr bool operator<(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return lhs.first < rhs.first || (!(rhs.first < lhs.first) && lhs.second < rhs.second);
+    }
+
+    template <typename T1, typename T2>
+    constexpr bool operator<=(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return !(rhs < lhs);
+    }
+
+    template <typename T1, typename T2>
+    constexpr bool operator>(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return rhs < lhs;
+    }
+
+    template <typename T1, typename T2>
+    constexpr bool operator>=(const pair<T1, T2> &lhs, const pair<T1, T2> &rhs)
+    {
+        return !(lhs < rhs);
+    }
+
+    namespace details
+    {
+        template <typename T>
+        struct decay_ref_wrapper
+        {
+            using type = T;
+        };
+
+        template <typename T>
+        struct decay_ref_wrapper<std::reference_wrapper<T>>
+        {
+            using type = T &;
+        };
+    }
+
+    template <class T1, class T2>
+    constexpr auto make_pair(T1 &&t1, T2 &&t2)
+    {
+        using U1 = typename details::decay_ref_wrapper<std::decay_t<T1>>::type;
+        using U2 = typename details::decay_ref_wrapper<std::decay_t<T2>>::type;
+
+        return std::pair<U1, U2>(std::forward<U1>(t1), std::forward<U2>(t2));
+    }
 }
 
 #endif /* !FOR_LIBCXX_UTILITY */
