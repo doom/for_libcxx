@@ -6,6 +6,7 @@
 #define FOR_LIBCXX_ALGORITHM
 
 #include <iterator>
+#include <details/move_and_forward.hpp>
 
 namespace std
 {
