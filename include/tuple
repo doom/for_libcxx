@@ -8,7 +8,9 @@
 #include <meta/meta.hpp>
 #include <cstddef>
 #include <utility>
+#include <type_traits>
 #include <details/copy_constructible.hpp>
+#include <details/more_type_traits.hpp>
 
 namespace std
 {
@@ -226,6 +228,12 @@ namespace std
     {
         static_assert(sizeof...(Ts) == sizeof...(Us));
         return !(lhs < rhs);
+    }
+
+    template <typename ...Types>
+    constexpr auto make_tuple(Types &&...args)
+    {
+        return std::tuple<more::decay_and_unwrap_ref_t<Types>...>(std::forward<Types>(args)...);
     }
 }
 
