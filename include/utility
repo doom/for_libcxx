@@ -275,26 +275,11 @@ namespace std
         return !(lhs < rhs);
     }
 
-    namespace details
-    {
-        template <typename T>
-        struct decay_ref_wrapper
-        {
-            using type = T;
-        };
-
-        template <typename T>
-        struct decay_ref_wrapper<std::reference_wrapper<T>>
-        {
-            using type = T &;
-        };
-    }
-
     template <class T1, class T2>
     constexpr auto make_pair(T1 &&t1, T2 &&t2)
     {
-        using U1 = typename details::decay_ref_wrapper<std::decay_t<T1>>::type;
-        using U2 = typename details::decay_ref_wrapper<std::decay_t<T2>>::type;
+        using U1 = more::decay_and_unwrap_ref_t<T1>;
+        using U2 = more::decay_and_unwrap_ref_t<T2>;
 
         return std::pair<U1, U2>(std::forward<U1>(t1), std::forward<U2>(t2));
     }

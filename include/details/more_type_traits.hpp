@@ -38,6 +38,24 @@ namespace std::more
 
     template <bool value>
     using overload_n_if = std::enable_if_t<value, int>;
+
+    namespace details
+    {
+        template <typename T>
+        struct decay_ref_wrapper
+        {
+            using type = T;
+        };
+
+        template <typename T>
+        struct decay_ref_wrapper<std::reference_wrapper<T>>
+        {
+            using type = T &;
+        };
+    }
+
+    template <typename T>
+    using decay_and_unwrap_ref_t = typename details::decay_ref_wrapper<std::decay_t<T>>::type;
 }
 
 #endif /* !FOR_LIBCXX_MORE_TYPE_TRAITS_HPP */
