@@ -76,6 +76,9 @@ namespace std
     template <std::size_t N>
     using make_index_sequence = typename details::make_iseq<N>::type;
 
+    template <typename ...Types>
+    using index_sequence_for = make_index_sequence<sizeof...(Types)>;
+
     template <typename T1, typename T2>
     class pair
     {
