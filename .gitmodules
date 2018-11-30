@@ -1,3 +1,6 @@
 [submodule "lib/for_libc"]
 	path = lib/for_libc
 	url = git@github.com:/doom/for_libc
+[submodule "lib/meta"]
+	path = lib/meta
+	url = git@github.com:/doom/meta

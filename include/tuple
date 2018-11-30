@@ -1,0 +1,232 @@
+/*
+** Created by doom on 29/10/18.
+*/
+
+#ifndef FOR_LIBCXX_TUPLE
+#define FOR_LIBCXX_TUPLE
+
+#include <meta/meta.hpp>
+#include <cstddef>
+#include <utility>
+#include <details/copy_constructible.hpp>
+
+namespace std
+{
+    namespace details
+    {
+        template <std::size_t Idx, typename T>
+        struct tuple_element_holder
+        {
+            T _t;
+
+            using type = T;
+
+            constexpr tuple_element_holder() = default;
+
+            constexpr tuple_element_holder(const tuple_element_holder &) = default;
+
+            constexpr tuple_element_holder(tuple_element_holder &&) = default;
+
+            constexpr tuple_element_holder &operator=(const tuple_element_holder &) = default;
+
+            constexpr tuple_element_holder &operator=(tuple_element_holder &&) = default;
+
+            constexpr tuple_element_holder(const T &t) noexcept : _t(t)
+            {
+            }
+
+            constexpr const T &get() const & noexcept
+            {
+                return _t;
+            }
+
+            constexpr T &get() & noexcept
+            {
+                return _t;
+            }
+
+            constexpr const T &&get() const && noexcept
+            {
+                return std::move(_t);
+            }
+
+            constexpr T &&get() && noexcept
+            {
+                return std::move(_t);
+            }
+        };
+
+        template <typename IdxSeq, typename ...Types>
+        struct tuple_base;
+
+        template <std::size_t ...Idx, typename ...Types>
+        struct tuple_base<std::index_sequence<Idx...>, Types...> : public tuple_element_holder<Idx, Types> ...
+        {
+            constexpr tuple_base() = default;
+
+            constexpr tuple_base(const Types &...args) : tuple_element_holder<Idx, Types>(args) ...
+            {
+
+            }
+        };
+    }
+
+    template <typename ...Types>
+    class tuple : public details::tuple_base<std::index_sequence_for<Types...>, Types...>
+    {
+    private:
+        using base = details::tuple_base<std::index_sequence_for<Types...>, Types...>;
+
+    public:
+        constexpr tuple() = default;
+
+        ~tuple() noexcept = default;
+
+        constexpr tuple(const tuple &) = default;
+
+        constexpr tuple(tuple &&) = default;
+
+        constexpr tuple &operator=(const tuple &) = default;
+
+        constexpr tuple &operator=(tuple &&) = default;
+
+        constexpr tuple(const Types &...args) : base(args...)
+        {
+        }
+
+//        template <typename ...UTypes>
+//        constexpr tuple(UTypes &&...args)
+//        {
+//
+//        }
+    };
+
+    template <typename T>
+    class tuple_size;
+
+    template <typename ...Types>
+    class tuple_size<std::tuple<Types...>> : public std::integral_constant<std::size_t, sizeof...(Types)>
+    {
+    };
+
+    template <typename T>
+    class tuple_size<const T> : public std::integral_constant<std::size_t, tuple_size<T>::value>
+    {
+    };
+
+    template <typename T>
+    class tuple_size<volatile T> : public std::integral_constant<std::size_t, tuple_size<T>::value>
+    {
+    };
+
+    template <typename T>
+    class tuple_size<const volatile T> : public std::integral_constant<std::size_t, tuple_size<T>::value>
+    {
+    };
+
+    template <typename T>
+    inline constexpr const bool tuple_size_v = tuple_size<T>::value;
+
+    template <std::size_t I, typename T>
+    struct tuple_element;
+
+    template <std::size_t I, typename ...Types>
+    struct tuple_element<I, tuple<Types...>>
+    {
+        using type = meta::at<meta::list<Types...>, I>;
+    };
+
+    template <std::size_t I, typename Tuple>
+    using tuple_element_t = typename tuple_element<I, Tuple>::type;
+
+    template <std::size_t I, typename ...Types>
+    constexpr std::tuple_element_t<I, tuple<Types...>> &get(tuple<Types...> &t) noexcept
+    {
+        using E = std::tuple_element_t<I, tuple<Types...>>;
+        return static_cast<details::tuple_element_holder<I, E> &>(t).get();
+    }
+
+    template <std::size_t I, typename ...Types>
+    constexpr const std::tuple_element_t<I, tuple<Types...>> &get(const tuple<Types...> &t) noexcept
+    {
+        using E = std::tuple_element_t<I, tuple<Types...>>;
+        return static_cast<const details::tuple_element_holder<I, E> &>(t).get();
+    }
+
+    namespace details
+    {
+        template <typename TupleA, typename TupleB, std::size_t idx, std::size_t end>
+        struct tuple_cmp
+        {
+            static constexpr bool is_equal(const TupleA &lhs, const TupleB &rhs)
+            {
+                return std::get<idx>(lhs) == std::get<idx>(rhs)
+                       && details::tuple_cmp<TupleA, TupleB, idx + 1, end>::is_equal(lhs, rhs);
+            }
+
+            static constexpr bool is_less(const TupleA &lhs, const TupleB &rhs)
+            {
+                return std::get<idx>(lhs) < std::get<idx>(rhs)
+                       && details::tuple_cmp<TupleA, TupleB, idx + 1, end>::is_less(lhs, rhs);
+            }
+        };
+
+        template <typename TupleA, typename TupleB, std::size_t end>
+        struct tuple_cmp<TupleA, TupleB, end, end>
+        {
+            static constexpr bool is_equal(const TupleA &lhs, const TupleB &rhs)
+            {
+                return true;
+            }
+
+            static constexpr bool is_less(const TupleA &lhs, const TupleB &rhs)
+            {
+                return true;
+            }
+        };
+    }
+
+    template <typename ...Ts, typename ...Us>
+    constexpr bool operator==(const tuple<Ts...> &lhs, const tuple<Us...> &rhs)
+    {
+        static_assert(sizeof...(Ts) == sizeof...(Us));
+        return details::tuple_cmp<tuple<Ts...>, tuple<Us...>, 0, sizeof...(Ts)>::is_equal(lhs, rhs);
+    }
+
+    template <typename ...Ts, typename ...Us>
+    constexpr bool operator!=(const tuple<Ts...> &lhs, const tuple<Us...> &rhs)
+    {
+        static_assert(sizeof...(Ts) == sizeof...(Us));
+        return !details::tuple_cmp<tuple<Ts...>, tuple<Us...>, 0, sizeof...(Ts)>::is_equal(lhs, rhs);
+    }
+
+    template <typename ...Ts, typename ...Us>
+    constexpr bool operator<(const tuple<Ts...> &lhs, const tuple<Us...> &rhs)
+    {
+        static_assert(sizeof...(Ts) == sizeof...(Us));
+        return details::tuple_cmp<tuple<Ts...>, tuple<Us...>, 0, sizeof...(Ts)>::is_less(lhs, rhs);
+    }
+
+    template <typename ...Ts, typename ...Us>
+    constexpr bool operator<=(const tuple<Ts...> &lhs, const tuple<Us...> &rhs)
+    {
+        static_assert(sizeof...(Ts) == sizeof...(Us));
+        return !(rhs > lhs);
+    }
+
+    template <typename ...Ts, typename ...Us>
+    constexpr bool operator>(const tuple<Ts...> &lhs, const tuple<Us...> &rhs)
+    {
+        static_assert(sizeof...(Ts) == sizeof...(Us));
+        return rhs < lhs;
+    }
+
+    template <typename ...Ts, typename ...Us>
+    constexpr bool operator>=(const tuple<Ts...> &lhs, const tuple<Us...> &rhs)
+    {
+        static_assert(sizeof...(Ts) == sizeof...(Us));
+        return !(lhs < rhs);
+    }
+}
+
+#endif /* !FOR_LIBCXX_TUPLE */
