@@ -7,7 +7,7 @@
 
 #include <type_traits>
 #include <utility>
-#include <memory>
+#include <details/addressof.hpp>
 
 namespace std
 {

@@ -129,10 +129,87 @@ ut_test(allocator_traits)
     static_assert(std::is_same_v<default_trts::rebind_traits<char>, std::allocator_traits<std::allocator<char>>>);
 }
 
+namespace
+{
+    template <typename T>
+    struct mark_deleter
+    {
+        void operator()(T *ptr)
+        {
+            last_deleted = ptr;
+        }
+
+        static T *last_deleted;
+    };
+
+    template <typename T>
+    inline T *mark_deleter<T>::last_deleted = nullptr;
+
+    template <typename T>
+    struct do_nothing_deleter
+    {
+        void operator()(T *)
+        {
+        }
+    };
+}
+
+ut_test(unique_ptr_move)
+{
+    static_assert(sizeof(std::unique_ptr<int *>) == sizeof(int *), "std::unique_ptr should use EBO when possible");
+
+    int a = 2;
+    {
+        std::unique_ptr<int, mark_deleter<int>> a_ptr2;
+        {
+            std::unique_ptr<int, mark_deleter<int>> a_ptr(&a);
+
+            a_ptr2 = std::move(a_ptr);
+        }
+        ut_assert_eq(mark_deleter<int>::last_deleted, nullptr); // move should reset a_ptr to nullptr
+    }
+    ut_assert_eq(mark_deleter<int>::last_deleted, &a);
+
+    int b = 3;
+    {
+        std::unique_ptr<int, mark_deleter<int>> b_ptr(&b);
+        {
+            std::unique_ptr<int, mark_deleter<int>> a_ptr(&a);
+
+            b_ptr = std::move(a_ptr);
+        }
+        ut_assert_eq(mark_deleter<int>::last_deleted, &b); // move should swap a_ptr and b_ptr
+    }
+    ut_assert_eq(mark_deleter<int>::last_deleted, &a);
+}
+
+ut_test(unique_ptr_comparison)
+{
+    std::unique_ptr<int, do_nothing_deleter<int>> ptr;
+
+    ut_assert_eq(ptr, nullptr);
+    ut_assert_eq(ptr, ptr);
+    ut_assert_le(ptr, nullptr);
+    ut_assert_le(nullptr, ptr);
+
+    int a = 2;
+    ptr.reset(&a);
+    ut_assert_eq(ptr, ptr);
+    ut_assert_ne(ptr, nullptr);
+    ut_assert_gt(ptr, nullptr);
+    ut_assert_ge(ptr, nullptr);
+    ut_assert_ge(ptr, ptr);
+    ut_assert_lt(nullptr, ptr);
+    ut_assert_le(nullptr, ptr);
+    ptr.reset();
+}
+
 ut_group(memory,
          ut_get_test(addressof),
          ut_get_test(pointer_traits),
-         ut_get_test(allocator_traits)
+         ut_get_test(allocator_traits),
+         ut_get_test(unique_ptr_move),
+         ut_get_test(unique_ptr_comparison),
 );
 
 void run_memory_tests()

@@ -6,24 +6,19 @@
 #define FOR_LIBCXX_MEMORY
 
 #include <details/config.hpp>
+#include <cstddef>
 #include <new>
 #include <limits>
 #include <utility>
 #include <iterator>
+#include <type_traits>
 #include <details/detection.hpp>
 #include <details/detectors.hpp>
+#include <details/addressof.hpp>
+#include <details/unique_ptr.hpp>
 
 namespace std
 {
-    template <typename T>
-    T *addressof(T &arg) noexcept
-    {
-        return reinterpret_cast<T *>(&const_cast<char &>(reinterpret_cast<const volatile char &>(arg)));
-    }
-
-    template <typename T>
-    const T *addressof(const T &&arg) noexcept = delete;
-
     namespace details
     {
         template <typename T>

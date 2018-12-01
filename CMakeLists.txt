@@ -21,6 +21,8 @@ set(LIBCXX_SOURCES
         include/details/detectors.hpp
         include/details/more_type_traits.hpp
         include/details/move_and_forward.hpp
+        include/details/unique_ptr.hpp
+        include/details/addressof.hpp
         include/cstdint
         include/cstddef
         include/climits
