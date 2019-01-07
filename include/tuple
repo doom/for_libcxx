@@ -5,7 +5,7 @@
 #ifndef FOR_LIBCXX_TUPLE
 #define FOR_LIBCXX_TUPLE
 
-#include <meta/meta.hpp>
+#include <meta/sequence/sequence.hpp>
 #include <cstddef>
 #include <utility>
 #include <type_traits>
