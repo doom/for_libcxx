@@ -17,7 +17,6 @@ set(LIBCXX_SOURCES
         include/details/copy_assignable.hpp
         include/details/constexpr_cstring.hpp
         include/details/char_traits.hpp
-        include/details/detection.hpp
         include/details/detectors.hpp
         include/details/more_type_traits.hpp
         include/details/move_and_forward.hpp
