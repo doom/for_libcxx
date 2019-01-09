@@ -6,6 +6,8 @@
 #define FOR_LIBCXX_ALGORITHM
 
 #include <iterator>
+#include <utility>
+#include <functional>
 #include <details/move_and_forward.hpp>
 
 namespace std
@@ -40,9 +42,7 @@ namespace std
     template <typename ForwardIt>
     constexpr ForwardIt min_element(ForwardIt first, ForwardIt last) noexcept
     {
-        return min_element(first, last, [](const auto &a, const auto &b) {
-            return a < b;
-        });
+        return min_element(first, last, std::less<>());
     }
 
     template <typename ForwardIt, typename Comparator>
@@ -63,19 +63,61 @@ namespace std
     template <typename ForwardIt>
     constexpr ForwardIt max_element(ForwardIt first, ForwardIt last) noexcept
     {
-        return max_element(first, last, [](const auto &a, const auto &b) {
-            return a < b;
-        });
+        return max_element(first, last, std::less<>());
     }
 
-    template <typename T, typename = std::enable_if_t<std::is_move_constructible_v<T> && std::is_move_assignable_v<T>>>
-    void swap(T &a, T &b) noexcept(noexcept(std::is_nothrow_move_constructible<T>::value &&
-                                            std::is_nothrow_move_assignable<T>::value))
+    template <typename ForwardIt, typename Comparator>
+    std::pair<ForwardIt, ForwardIt> minmax_element(ForwardIt first, ForwardIt last, Comparator is_less)
     {
-        T tmp(std::move(a));
+        ForwardIt smol = first;
+        ForwardIt big = first;
 
-        a = std::move(b);
-        b = std::move(tmp);
+        if (first == last || ++first == last) {
+            return {smol, big};
+        }
+
+        if (is_less(*first, *smol)) {
+            smol = first;
+        } else {
+            big = first;
+        }
+
+        while (++first != last) {
+            ForwardIt i = first;
+
+            if (++first == last) {
+                if (is_less(*i, *smol)) {
+                    smol = i;
+                } else if (!(is_less(*i, *big))) {
+                    big = i;
+                }
+                break;
+            } else {
+                if (is_less(*first, *i)) {
+                    if (is_less(*first, *smol)) {
+                        smol = first;
+                    }
+                    if (!(is_less(*i, *big))) {
+                        big = i;
+                    }
+                } else {
+                    if (is_less(*i, *smol)) {
+                        smol = i;
+                    }
+                    if (!(is_less(*first, *big))) {
+                        big = first;
+                    }
+                }
+            }
+        }
+
+        return {smol, big};
+    }
+
+    template <typename ForwardIt>
+    std::pair<ForwardIt, ForwardIt> minmax_element(ForwardIt first, ForwardIt last)
+    {
+        return std::minmax_element(first, last, std::less<>());
     }
 
     template <typename InputIt, typename UnaryPredicate>

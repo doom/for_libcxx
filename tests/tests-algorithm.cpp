@@ -44,6 +44,29 @@ ut_test(max_element)
     ut_assert_eq(it4, std::begin(arr1));
 }
 
+ut_test(minmax_element)
+{
+    int arr1[] = {1, 2, 1, 4, 5};
+
+    auto [min1, max1] = std::minmax_element(std::begin(arr1), std::end(arr1));
+    ut_assert_eq(min1, std::begin(arr1));
+    ut_assert_eq(max1, std::begin(arr1) + 4);
+
+    auto [min2, max2] = std::minmax_element(std::begin(arr1) + 1, std::begin(arr1) + 1);
+    ut_assert_eq(min2, std::begin(arr1) + 1);
+    ut_assert_eq(max2, std::begin(arr1) + 1);
+
+    auto [min3, max3] = std::minmax_element(std::end(arr1), std::end(arr1));
+    ut_assert_eq(min3, std::end(arr1));
+    ut_assert_eq(max3, std::end(arr1));
+
+    auto [min4, max4] = std::minmax_element(std::begin(arr1), std::end(arr1), [](const auto &a, const auto &b) {
+        return -a < -b;
+    });
+    ut_assert_eq(min4, std::begin(arr1) + 4);
+    ut_assert_eq(max4, std::begin(arr1) + 2); // Unlike max_element, minmax_element finds the last biggest element
+}
+
 namespace
 {
     namespace tests
@@ -233,6 +256,7 @@ ut_test(transform)
 ut_group(algorithm,
          ut_get_test(min_element),
          ut_get_test(max_element),
+         ut_get_test(minmax_element),
          ut_get_test(swap),
          ut_get_test(for_each),
          ut_get_test(find_if),

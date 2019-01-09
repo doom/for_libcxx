@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <details/move_and_forward.hpp>
 #include <details/more_type_traits.hpp>
-#include <algorithm>
+#include <details/swap.hpp>
 
 namespace std
 {

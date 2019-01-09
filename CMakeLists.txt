@@ -22,6 +22,7 @@ set(LIBCXX_SOURCES
         include/details/move_and_forward.hpp
         include/details/unique_ptr.hpp
         include/details/addressof.hpp
+        include/details/swap.hpp
         include/cstdint
         include/cstddef
         include/climits
