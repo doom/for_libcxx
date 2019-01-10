@@ -1,0 +1,29 @@
+/*
+** Created by doom on 09/01/19.
+*/
+
+#ifndef FOR_LIBCXX_NUMERIC
+#define FOR_LIBCXX_NUMERIC
+
+#include <functional>
+
+namespace std
+{
+    template <typename InputIt, typename T, typename BinaryOperation>
+    T accumulate(InputIt first, InputIt last, T init, BinaryOperation op)
+    {
+        while (first != last) {
+            init = op(init, *first);
+            ++first;
+        }
+        return init;
+    }
+
+    template <typename InputIt, typename T>
+    T accumulate(InputIt first, InputIt last, T init)
+    {
+        return accumulate(first, last, std::move(init), std::plus<>());
+    }
+}
+
+#endif /* !FOR_LIBCXX_NUMERIC */

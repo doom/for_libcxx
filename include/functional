@@ -99,6 +99,10 @@ namespace std
     template <typename T>
     struct less
     {
+        using result_type = bool;
+        using first_argument_type = T;
+        using second_argument_type = T;
+
         constexpr bool operator()(const T &a, const T &b) const
         {
             return a < b;
@@ -112,6 +116,32 @@ namespace std
         constexpr auto operator()(T &&a, U &&b) const -> decltype(std::forward<T>(a) < std::forward<U>(b))
         {
             return std::forward<T>(a) < std::forward<U>(b);
+        }
+    };
+
+    template <typename T = void>
+    struct plus;
+
+    template <typename T>
+    struct plus
+    {
+        using result_type = T;
+        using first_argument_type = T;
+        using second_argument_type = T;
+
+        constexpr T operator()(const T &a, const T &b) const
+        {
+            return a + b;
+        }
+    };
+
+    template <>
+    struct plus<void>
+    {
+        template <typename T, typename U>
+        constexpr auto operator()(T &&a, U &&b) const -> decltype(std::forward<T>(a) + std::forward<U>(b))
+        {
+            return std::forward<T>(a) + std::forward<U>(b);
         }
     };
 }
