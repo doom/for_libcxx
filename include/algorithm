@@ -378,6 +378,39 @@ namespace std
         }
         return first;
     }
+
+    template <typename BidirIt>
+    constexpr void reverse(BidirIt first, BidirIt last)
+    {
+        while (first != last && first != --last) {
+            std::iter_swap(first, last);
+            ++first;
+        }
+    }
+
+    template <typename ForwardIt, typename BinaryPredicate>
+    constexpr ForwardIt unique(ForwardIt first, ForwardIt last, BinaryPredicate p)
+    {
+        if (first == last) {
+            return last;
+        }
+
+        ForwardIt out = first;
+        while (++first != last) {
+            if (!p(*first, *out) && ++out != first) {
+                *out = std::move(*first);
+            }
+        }
+        return ++out;
+    }
+
+    template <typename ForwardIt>
+    constexpr ForwardIt unique(ForwardIt first, ForwardIt last)
+    {
+        return unique(first, last, [](auto &&a, auto &&b) {
+            return a == b;
+        });
+    }
 }
 
 #endif /* !FOR_LIBCXX_ALGORITHM */

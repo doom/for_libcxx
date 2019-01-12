@@ -48,19 +48,19 @@ ut_test(minmax_element)
 {
     int arr1[] = {1, 2, 1, 4, 5};
 
-    auto [min1, max1] = std::minmax_element(std::begin(arr1), std::end(arr1));
+    auto[min1, max1] = std::minmax_element(std::begin(arr1), std::end(arr1));
     ut_assert_eq(min1, std::begin(arr1));
     ut_assert_eq(max1, std::begin(arr1) + 4);
 
-    auto [min2, max2] = std::minmax_element(std::begin(arr1) + 1, std::begin(arr1) + 1);
+    auto[min2, max2] = std::minmax_element(std::begin(arr1) + 1, std::begin(arr1) + 1);
     ut_assert_eq(min2, std::begin(arr1) + 1);
     ut_assert_eq(max2, std::begin(arr1) + 1);
 
-    auto [min3, max3] = std::minmax_element(std::end(arr1), std::end(arr1));
+    auto[min3, max3] = std::minmax_element(std::end(arr1), std::end(arr1));
     ut_assert_eq(min3, std::end(arr1));
     ut_assert_eq(max3, std::end(arr1));
 
-    auto [min4, max4] = std::minmax_element(std::begin(arr1), std::end(arr1), [](const auto &a, const auto &b) {
+    auto[min4, max4] = std::minmax_element(std::begin(arr1), std::end(arr1), [](const auto &a, const auto &b) {
         return -a < -b;
     });
     ut_assert_eq(min4, std::begin(arr1) + 4);
@@ -334,13 +334,42 @@ ut_test(generate_n)
 {
     int arr1[5] = {0};
 
-    auto it = std::generate_n(std::begin(arr1), 5, [](){
+    auto it = std::generate_n(std::begin(arr1), 5, []() {
         return 1;
     });
     ut_assert_eq(it, std::end(arr1));
     for (auto &&i : arr1) {
         ut_assert_eq(i, 1);
     }
+}
+
+ut_test(reverse)
+{
+    int arr1[] = {1, 2, 3, 4, 5};
+    int arr2[] = {1, 2, 3, 4, 5, 6};
+
+    std::reverse(std::begin(arr1), std::end(arr1));
+    for (int i = 0; i < 5; ++i) {
+        ut_assert_eq(arr1[i], 5 - i);
+    }
+
+    std::reverse(std::begin(arr2), std::end(arr2));
+    for (int i = 0; i < 6; ++i) {
+        ut_assert_eq(arr2[i], 6 - i);
+    }
+}
+
+ut_test(unique)
+{
+    int arr[] = {1, 2, 2, 3, 4, 5, 5};
+
+    auto end_it = std::unique(std::begin(arr), std::end(arr));
+    int i = 1;
+    for (auto it = std::begin(arr); it != end_it; ++it) {
+        ut_assert_eq(i, *it);
+        ++i;
+    }
+    ut_assert_eq(i, 6);
 }
 
 ut_group(algorithm,
@@ -360,7 +389,9 @@ ut_group(algorithm,
          ut_get_test(fill),
          ut_get_test(fill_n),
          ut_get_test(generate),
-         ut_get_test(generate_n)
+         ut_get_test(generate_n),
+         ut_get_test(reverse),
+         ut_get_test(unique)
 );
 
 void run_algorithm_tests()
