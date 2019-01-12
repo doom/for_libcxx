@@ -340,6 +340,44 @@ namespace std
         rotate(left, old_first, right);
         return left;
     }
+
+    template <typename ForwardIt, typename T>
+    constexpr void fill(ForwardIt first, ForwardIt last, const T &value)
+    {
+        while (first != last) {
+            *first = value;
+            ++first;
+        }
+    }
+
+    template <typename OutputIt, typename Size, typename T>
+    constexpr OutputIt fill_n(OutputIt first, Size count, const T &value)
+    {
+        while (count--) {
+            *first = value;
+            ++first;
+        }
+        return first;
+    }
+
+    template <typename ForwardIt, typename Generator>
+    constexpr void generate(ForwardIt first, ForwardIt last, Generator g)
+    {
+        while (first != last) {
+            *first = g();
+            ++first;
+        }
+    }
+
+    template <typename OutputIt, typename Size, typename Generator>
+    constexpr OutputIt generate_n(OutputIt first, Size count, Generator g)
+    {
+        while (count--) {
+            *first = g();
+            ++first;
+        }
+        return first;
+    }
 }
 
 #endif /* !FOR_LIBCXX_ALGORITHM */

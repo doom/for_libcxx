@@ -297,6 +297,52 @@ ut_test(rotate)
     ut_assert_eq(arr2[4], 3);
 }
 
+ut_test(fill)
+{
+    int arr1[5] = {0};
+
+    std::fill(std::begin(arr1), std::end(arr1), 1);
+    for (auto &&i : arr1) {
+        ut_assert_eq(i, 1);
+    }
+}
+
+ut_test(fill_n)
+{
+    int arr1[5] = {0};
+
+    auto it = std::fill_n(std::begin(arr1), 5, 1);
+    ut_assert_eq(it, std::end(arr1));
+    for (auto &&i : arr1) {
+        ut_assert_eq(i, 1);
+    }
+}
+
+ut_test(generate)
+{
+    int arr1[5] = {0};
+
+    std::generate(std::begin(arr1), std::end(arr1), []() {
+        return 1;
+    });
+    for (auto &&i : arr1) {
+        ut_assert_eq(i, 1);
+    }
+}
+
+ut_test(generate_n)
+{
+    int arr1[5] = {0};
+
+    auto it = std::generate_n(std::begin(arr1), 5, [](){
+        return 1;
+    });
+    ut_assert_eq(it, std::end(arr1));
+    for (auto &&i : arr1) {
+        ut_assert_eq(i, 1);
+    }
+}
+
 ut_group(algorithm,
          ut_get_test(min_element),
          ut_get_test(max_element),
@@ -310,7 +356,11 @@ ut_group(algorithm,
          ut_get_test(copy),
          ut_get_test(transform),
          ut_get_test(remove_if),
-         ut_get_test(rotate)
+         ut_get_test(rotate),
+         ut_get_test(fill),
+         ut_get_test(fill_n),
+         ut_get_test(generate),
+         ut_get_test(generate_n)
 );
 
 void run_algorithm_tests()
