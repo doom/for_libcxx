@@ -272,6 +272,74 @@ namespace std
         }
         return f;
     }
+
+    template <typename ForwardIt, typename T>
+    void iota(ForwardIt first, ForwardIt last, T value)
+    {
+        while (first != last) {
+            *first = value;
+            ++first;
+            ++value;
+        }
+    }
+
+    template <typename ForwardIt, class UnaryPredicate>
+    constexpr ForwardIt remove_if(ForwardIt first, ForwardIt last, UnaryPredicate p)
+    {
+        auto it = std::find_if(first, last, p);
+
+        if (it == last) {
+            return last;
+        }
+        first = it;
+        while (++it != last) {
+            if (!p(*it)) {
+                *first++ = std::move(*it);
+            }
+        }
+        return first;
+    }
+
+    template <typename ForwardIt, class T>
+    constexpr ForwardIt remove(ForwardIt first, ForwardIt last, const T &value)
+    {
+        return remove_if(first, last, [&value](const auto &other) {
+            return other == value;
+        });
+    }
+
+    template <typename ForwardIt1, typename ForwardIt2>
+    constexpr void iter_swap(ForwardIt1 a, ForwardIt2 b)
+    {
+        using std::swap;
+        swap(*a, *b);
+    }
+
+    template <typename ForwardIt>
+    constexpr ForwardIt rotate(ForwardIt first, ForwardIt n_first, ForwardIt last)
+    {
+        if (first == n_first) {
+            return last;
+        }
+        if (n_first == last) {
+            return first;
+        }
+
+        ForwardIt left = first;
+        ForwardIt right = n_first;
+        ForwardIt old_first = first;
+
+        while (right != last) {
+            if (left == old_first) {
+                old_first = right;
+            }
+            iter_swap(left, right);
+            ++left;
+            ++right;
+        }
+        rotate(left, old_first, right);
+        return left;
+    }
 }
 
 #endif /* !FOR_LIBCXX_ALGORITHM */

@@ -253,6 +253,50 @@ ut_test(transform)
     }));
 }
 
+ut_test(remove_if)
+{
+    int arr[] = {0, 1, 2, 3, 4, 5, 6, 7};
+    int arr2[] = {0, 1, 2, 3, 4, 5, 6, 7};
+
+    auto end_it = std::remove_if(std::begin(arr), std::end(arr), [](const auto &a) {
+        return a % 2 != 0;
+    });
+    ut_assert_eq(end_it, std::begin(arr) + 4);
+    for (int i = 0; i < 4; ++i) {
+        ut_assert_eq(arr[i], 2 * i);
+    }
+
+    end_it = std::remove_if(std::begin(arr2), std::end(arr2), [](const auto &a) {
+        return a % 2 == 0;
+    });
+    ut_assert_eq(end_it, std::begin(arr2) + 4);
+    for (int i = 0; i < 4; ++i) {
+        ut_assert_eq(arr2[i], 2 * i + 1);
+    }
+}
+
+ut_test(rotate)
+{
+    int arr1[] = {1, 2, 3, 4, 5};
+    int arr2[] = {1, 2, 3, 4, 5};
+
+    auto it1 = std::rotate(std::begin(arr1), std::begin(arr1) + 2, std::end(arr1));
+    ut_assert_eq(it1, std::begin(arr1) + (std::end(arr1) - (std::begin(arr1) + 2)));
+    ut_assert_eq(arr1[0], 3);
+    ut_assert_eq(arr1[1], 4);
+    ut_assert_eq(arr1[2], 5);
+    ut_assert_eq(arr1[3], 1);
+    ut_assert_eq(arr1[4], 2);
+
+    auto it2 = std::rotate(std::begin(arr2), std::begin(arr2) + 3, std::end(arr2));
+    ut_assert_eq(it2, std::begin(arr2) + (std::end(arr2) - (std::begin(arr2) + 3)));
+    ut_assert_eq(arr2[0], 4);
+    ut_assert_eq(arr2[1], 5);
+    ut_assert_eq(arr2[2], 1);
+    ut_assert_eq(arr2[3], 2);
+    ut_assert_eq(arr2[4], 3);
+}
+
 ut_group(algorithm,
          ut_get_test(min_element),
          ut_get_test(max_element),
@@ -264,7 +308,9 @@ ut_group(algorithm,
          ut_get_test(any_of),
          ut_get_test(none_of),
          ut_get_test(copy),
-         ut_get_test(transform)
+         ut_get_test(transform),
+         ut_get_test(remove_if),
+         ut_get_test(rotate)
 );
 
 void run_algorithm_tests()
