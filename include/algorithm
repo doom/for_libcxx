@@ -120,6 +120,24 @@ namespace std
         return std::minmax_element(first, last, std::less<>());
     }
 
+    template <typename T, typename Compare>
+    constexpr const T &clamp(const T &v, const T &lo, const T &hi, Compare cmp)
+    {
+        if (cmp(v, lo)) {
+            return lo;
+        }
+        if (cmp(hi, v)) {
+            return hi;
+        }
+        return v;
+    }
+
+    template <typename T>
+    constexpr const T &clamp(const T &v, const T &lo, const T &hi)
+    {
+        return clamp(v, lo, hi, std::less<>());
+    }
+
     template <typename InputIt, typename UnaryPredicate>
     constexpr InputIt find_if(InputIt first, InputIt last, UnaryPredicate p) noexcept
     {

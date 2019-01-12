@@ -67,6 +67,22 @@ ut_test(minmax_element)
     ut_assert_eq(max4, std::begin(arr1) + 2); // Unlike max_element, minmax_element finds the last biggest element
 }
 
+ut_test(clamp)
+{
+    int i = 1;
+    int j = 10;
+
+    ut_assert_eq(std::clamp(42, i, j), j);
+    ut_assert_eq(&std::clamp(42, i, j), &j);
+
+    ut_assert_eq(std::clamp(0, i, j), i);
+    ut_assert_eq(&std::clamp(0, i, j), &i);
+
+    int k = 5;
+    ut_assert_eq(std::clamp(k, i, j), k);
+    ut_assert_eq(&std::clamp(k, i, j), &k);
+}
+
 namespace
 {
     namespace tests
@@ -384,6 +400,7 @@ ut_group(algorithm,
          ut_get_test(min_element),
          ut_get_test(max_element),
          ut_get_test(minmax_element),
+         ut_get_test(clamp),
          ut_get_test(swap),
          ut_get_test(for_each),
          ut_get_test(find_if),
