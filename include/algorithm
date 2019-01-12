@@ -411,6 +411,25 @@ namespace std
             return a == b;
         });
     }
+
+    template <typename ForwardIt, typename UnaryPredicate, typename T>
+    constexpr void replace_if(ForwardIt first, ForwardIt last, UnaryPredicate p, const T &new_value)
+    {
+        while (first != last) {
+            if (p(*first)) {
+                *first = new_value;
+            }
+            ++first;
+        }
+    }
+
+    template <typename ForwardIt, typename T>
+    constexpr void replace(ForwardIt first, ForwardIt last, const T &old_value, const T &new_value)
+    {
+        return replace_if(first, last, [&old_value](const auto &v) {
+            return v == old_value;
+        }, new_value);
+    }
 }
 
 #endif /* !FOR_LIBCXX_ALGORITHM */

@@ -372,6 +372,14 @@ ut_test(unique)
     ut_assert_eq(i, 6);
 }
 
+ut_test(replace_if)
+{
+    char hello[] = "hexxo worxd";
+
+    std::replace(std::begin(hello), std::end(hello), 'x', 'l');
+    ut_assert_streq(hello, "hello world");
+}
+
 ut_group(algorithm,
          ut_get_test(min_element),
          ut_get_test(max_element),
@@ -391,7 +399,8 @@ ut_group(algorithm,
          ut_get_test(generate),
          ut_get_test(generate_n),
          ut_get_test(reverse),
-         ut_get_test(unique)
+         ut_get_test(unique),
+         ut_get_test(replace_if)
 );
 
 void run_algorithm_tests()
