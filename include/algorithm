@@ -240,6 +240,19 @@ namespace std
         return out_first;
     }
 
+    template <typename InputIt, typename OutputIt, typename UnaryPredicate>
+    constexpr OutputIt copy_if(InputIt in_first, InputIt in_last, OutputIt out_first, UnaryPredicate pred)
+    {
+        while (in_first != in_last) {
+            if (pred(*in_first)) {
+                *out_first = *in_first;
+                ++out_first;
+            }
+            ++in_first;
+        }
+        return out_first;
+    }
+
     template <typename InputIt, typename OutputIt>
     constexpr OutputIt move(InputIt in_first, InputIt in_last, OutputIt out_first)
     {

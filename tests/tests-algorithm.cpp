@@ -241,6 +241,20 @@ ut_test(copy)
     }
 }
 
+ut_test(copy_if)
+{
+    int arr1[] = {0, 1, 2, 3, 4, 5};
+    int arr2[3] = {0};
+
+    auto end_it = std::copy_if(std::begin(arr1), std::end(arr1), std::begin(arr2), [](const auto &a) {
+        return a % 2 == 0;
+    });
+    ut_assert_eq(end_it, std::end(arr2));
+    for (int i = 0; i < 3; ++i) {
+        ut_assert_eq(arr2[i], 2 * i);
+    }
+}
+
 ut_test(transform)
 {
     constexpr std::string_view s{"salut"};
@@ -408,6 +422,7 @@ ut_group(algorithm,
          ut_get_test(any_of),
          ut_get_test(none_of),
          ut_get_test(copy),
+         ut_get_test(copy_if),
          ut_get_test(transform),
          ut_get_test(remove_if),
          ut_get_test(rotate),
