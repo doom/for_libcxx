@@ -410,6 +410,17 @@ ut_test(replace_if)
     ut_assert_streq(hello, "hello world");
 }
 
+ut_test(replace_copy_if)
+{
+    const char hello[] = "hexxo worxd";
+    char out[12] = {0};
+
+    auto end_it = std::replace_copy(std::begin(hello), std::end(hello), std::begin(out), 'x', 'l');
+    ut_assert_eq(end_it, std::end(out));
+    ut_assert_streq(hello, "hexxo worxd");
+    ut_assert_streq(out, "hello world");
+}
+
 ut_group(algorithm,
          ut_get_test(min_element),
          ut_get_test(max_element),
@@ -432,7 +443,8 @@ ut_group(algorithm,
          ut_get_test(generate_n),
          ut_get_test(reverse),
          ut_get_test(unique),
-         ut_get_test(replace_if)
+         ut_get_test(replace_if),
+         ut_get_test(replace_copy_if)
 );
 
 void run_algorithm_tests()

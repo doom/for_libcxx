@@ -461,6 +461,31 @@ namespace std
             return v == old_value;
         }, new_value);
     }
+
+    template <typename InputIt, typename OutputIt, typename UnaryPredicate, typename T>
+    constexpr OutputIt replace_copy_if(InputIt in_first, InputIt in_last, OutputIt out_first,
+                                       UnaryPredicate p, const T &new_value)
+    {
+        while (in_first != in_last) {
+            if (p(*in_first)) {
+                *out_first = new_value;
+            } else {
+                *out_first = *in_first;
+            }
+            ++out_first;
+            ++in_first;
+        }
+        return out_first;
+    }
+
+    template <typename InputIt, typename OutputIt, typename T>
+    constexpr OutputIt replace_copy(InputIt in_first, InputIt in_last, OutputIt out_first,
+                                    const T &old_value, const T &new_value)
+    {
+        return replace_copy_if(in_first, in_last, out_first, [&old_value](const auto &v) {
+            return v == old_value;
+        }, new_value);
+    }
 }
 
 #endif /* !FOR_LIBCXX_ALGORITHM */
