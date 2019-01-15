@@ -6,6 +6,7 @@
 #define FOR_LIBCXX_TUPLE
 
 #include <meta/sequence/sequence.hpp>
+#include <meta/utils/integral_constants.hpp>
 #include <cstddef>
 #include <utility>
 #include <type_traits>
@@ -135,7 +136,7 @@ namespace std
     template <std::size_t I, typename ...Types>
     struct tuple_element<I, tuple<Types...>>
     {
-        using type = meta::at<meta::list<Types...>, I>;
+        using type = meta::at<meta::list<Types...>, meta::size_constant<I>>;
     };
 
     template <std::size_t I, typename Tuple>
