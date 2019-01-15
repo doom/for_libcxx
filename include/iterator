@@ -274,6 +274,30 @@ namespace std
     }
 
     template <typename T>
+    constexpr auto begin(T &t) -> decltype(t.begin())
+    {
+        return t.begin();
+    }
+
+    template <typename T>
+    constexpr auto begin(const T &t) -> decltype(t.begin())
+    {
+        return t.begin();
+    }
+
+    template <typename T>
+    constexpr auto end(T &t) -> decltype(t.end())
+    {
+        return t.end();
+    }
+
+    template <typename T>
+    constexpr auto end(const T &t) -> decltype(t.end())
+    {
+        return t.end();
+    }
+
+    template <typename T>
     inline constexpr auto cbegin(const T &t) noexcept(noexcept(std::begin(t))) -> decltype(std::begin(t))
     {
         return std::begin(t);
