@@ -7,6 +7,8 @@
 
 #include <type_traits>
 #include <details/move_and_forward.hpp>
+#include <details/detectors.hpp>
+#include <meta/detection/detection.hpp>
 
 namespace std
 {
@@ -30,14 +32,32 @@ namespace std
     {
     };
 
-    template <typename Iterator>
-    struct iterator_traits
+    namespace details
     {
-        using difference_type = typename Iterator::difference_type;
-        using value_type = typename Iterator::value_type;
-        using pointer = typename Iterator::pointer;
-        using reference = typename Iterator::reference;
-        using iterator_category = typename Iterator::iterator_category;
+        template <typename Iterator, bool>
+        struct iterator_traits
+        {
+        };
+
+        template <typename Iterator>
+        struct iterator_traits<Iterator, true>
+        {
+            using difference_type = typename Iterator::difference_type;
+            using value_type = typename Iterator::value_type;
+            using pointer = typename Iterator::pointer;
+            using reference = typename Iterator::reference;
+            using iterator_category = typename Iterator::iterator_category;
+        };
+    }
+
+    template <typename Iterator>
+    struct iterator_traits : details::iterator_traits<Iterator,
+        meta::is_detected_v<details::member_detector_difference_type, Iterator> &&
+        meta::is_detected_v<details::member_detector_value_type, Iterator> &&
+        meta::is_detected_v<details::member_detector_pointer, Iterator> &&
+        meta::is_detected_v<details::member_detector_reference, Iterator> &&
+        meta::is_detected_v<details::member_detector_iterator_category, Iterator>>
+    {
     };
 
     template <typename T>

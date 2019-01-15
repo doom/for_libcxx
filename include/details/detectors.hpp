@@ -32,6 +32,12 @@ namespace std::details
     using member_detector_const_pointer = typename T::const_pointer;
 
     template <typename T>
+    using member_detector_reference = typename T::reference;
+
+    template <typename T>
+    using member_detector_iterator_category = typename T::iterator_category;
+
+    template <typename T>
     using member_detector_void_pointer = typename T::void_pointer;
 
     template <typename T>
