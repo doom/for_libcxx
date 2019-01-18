@@ -624,7 +624,7 @@ ut_test(is_invocable)
 
 namespace
 {
-    enum class test
+    enum class test : char
     {
     };
 
@@ -638,6 +638,11 @@ ut_test(is_enum)
     static_assert(std::is_enum_v<test>);
     static_assert(std::is_enum_v<test2>);
     static_assert(!std::is_enum_v<int>);
+}
+
+ut_test(underlying_type)
+{
+    static_assert(std::is_same_v<std::underlying_type_t<test>, char>);
 }
 
 ut_group(type_traits,
@@ -676,7 +681,8 @@ ut_group(type_traits,
          ut_get_test(make_unsigned),
          ut_get_test(invoke_result),
          ut_get_test(is_invocable),
-         ut_get_test(is_enum)
+         ut_get_test(is_enum),
+         ut_get_test(underlying_type)
 );
 
 void run_type_traits_tests()
