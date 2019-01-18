@@ -1004,6 +1004,14 @@ namespace std
 
     template <typename Func, typename ...Arg>
     inline constexpr bool is_invocable_v = std::is_invocable<Func, Arg...>::value;
+
+    template <typename T>
+    struct is_enum : std::bool_constant<__is_enum(T)>
+    {
+    };
+
+    template <typename T>
+    inline constexpr bool is_enum_v = is_enum<T>::value;
 }
 
 #endif /* !FOR_LIBCXX_TYPE_TRAITS */

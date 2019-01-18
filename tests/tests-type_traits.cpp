@@ -622,6 +622,24 @@ ut_test(is_invocable)
     static_assert(std::is_invocable_v<decltype(&invoke_test::func), invoke_test, int>);
 }
 
+namespace
+{
+    enum class test
+    {
+    };
+
+    enum test2
+    {
+    };
+}
+
+ut_test(is_enum)
+{
+    static_assert(std::is_enum_v<test>);
+    static_assert(std::is_enum_v<test2>);
+    static_assert(!std::is_enum_v<int>);
+}
+
 ut_group(type_traits,
          ut_get_test(integral_constant),
          ut_get_test(bool_constant),
@@ -657,7 +675,8 @@ ut_group(type_traits,
          ut_get_test(aligned_storage),
          ut_get_test(make_unsigned),
          ut_get_test(invoke_result),
-         ut_get_test(is_invocable)
+         ut_get_test(is_invocable),
+         ut_get_test(is_enum)
 );
 
 void run_type_traits_tests()
