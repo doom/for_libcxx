@@ -53,7 +53,7 @@ add_library(for_libcxx-static STATIC ${LIBCXX_SOURCES})
 target_include_directories(for_libcxx SYSTEM PUBLIC include)
 target_include_directories(for_libcxx-static SYSTEM PUBLIC include)
 
-target_link_libraries(for_libcxx-static for_libc-static meta)
+target_link_libraries(for_libcxx-static for_libc-static doom::meta)
 
 add_executable(for_libcxx-tests
         tests/tests-main.cpp
@@ -75,4 +75,4 @@ add_executable(for_libcxx-tests
 
 set_target_properties(for_libcxx-tests PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
 
-target_link_libraries(for_libcxx-tests for_libcxx-static meta ut)
+target_link_libraries(for_libcxx-tests for_libcxx-static doom::meta ut)
