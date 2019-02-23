@@ -322,6 +322,22 @@ ut_test(initializer_list)
     }
 }
 
+ut_test(swap)
+{
+    std::vector<int, bump_allocator<int>> vec1{0, 1, 2, 3, 4};
+    std::vector<int, bump_allocator<int>> vec2{4, 3, 2, 1, 0};
+    auto data1 = vec1.data();
+    auto data2 = vec2.data();
+
+    std::swap(vec1, vec2);
+    ut_assert_eq(vec1.data(), data2);
+    ut_assert_eq(vec2.data(), data1);
+    for (int i = 0; i < 5; ++i) {
+        ut_assert_eq(vec1[i], 4 - i);
+        ut_assert_eq(vec2[i], i);
+    }
+}
+
 ut_group(vector,
          ut_get_test(basic),
          ut_get_test(multiple_reallocation),
@@ -335,7 +351,8 @@ ut_group(vector,
          ut_get_test(move_assignment),
          ut_get_test(copy_assignment),
          ut_get_test(insert_one),
-         ut_get_test(initializer_list)
+         ut_get_test(initializer_list),
+         ut_get_test(swap)
 );
 
 void run_vector_tests()
