@@ -661,6 +661,28 @@ ut_test(extent)
     static_assert(std::extent_v<int> == 0);
 }
 
+ut_test(conjunction)
+{
+    static_assert(std::conjunction_v<std::false_type, std::true_type> == false);
+    static_assert(std::conjunction_v<std::true_type, std::false_type> == false);
+    static_assert(std::conjunction_v<std::true_type, std::true_type> == true);
+    static_assert(std::conjunction_v<std::true_type, std::false_type, void> == false);
+    // conjunction_v is always bool, but not conjunction
+    static_assert(std::conjunction<std::integral_constant<int, 3>, std::integral_constant<int, 2>>::value == 2);
+    static_assert(std::conjunction_v<std::integral_constant<int, 2>, std::true_type> == true);
+}
+
+ut_test(disjunction)
+{
+    static_assert(std::disjunction_v<std::false_type, std::true_type> == true);
+    static_assert(std::disjunction_v<std::true_type, std::false_type> == true);
+    static_assert(std::disjunction_v<std::true_type, std::true_type> == true);
+    static_assert(std::disjunction_v<std::false_type, std::true_type, void> == true);
+    // disjunction_v is always bool, but not disjunction
+    static_assert(std::disjunction<std::integral_constant<int, 3>, std::integral_constant<int, 2>>::value == 3);
+    static_assert(std::disjunction<std::integral_constant<int, 2>, std::true_type>::value == 2);
+}
+
 ut_group(type_traits,
          ut_get_test(integral_constant),
          ut_get_test(bool_constant),
@@ -700,7 +722,9 @@ ut_group(type_traits,
          ut_get_test(is_enum),
          ut_get_test(underlying_type),
          ut_get_test(alignment_of),
-         ut_get_test(extent)
+         ut_get_test(extent),
+         ut_get_test(conjunction),
+         ut_get_test(disjunction)
 );
 
 void run_type_traits_tests()
