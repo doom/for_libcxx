@@ -421,6 +421,16 @@ ut_test(replace_copy_if)
     ut_assert_streq(out, "hello world");
 }
 
+ut_test(lexicographical_compare)
+{
+    const char hello[] = "hello world";
+    const char hello2[] = "hello worlda";
+
+    ut_assert(std::lexicographical_compare(std::begin(hello), std::end(hello), std::begin(hello2), std::end(hello2)));
+    ut_assert_false(std::lexicographical_compare(std::begin(hello), std::end(hello), std::begin(hello), std::end(hello)));
+    ut_assert_false(std::lexicographical_compare(std::begin(hello2), std::end(hello2), std::begin(hello), std::end(hello)));
+}
+
 ut_group(algorithm,
          ut_get_test(min_element),
          ut_get_test(max_element),
@@ -444,7 +454,8 @@ ut_group(algorithm,
          ut_get_test(reverse),
          ut_get_test(unique),
          ut_get_test(replace_if),
-         ut_get_test(replace_copy_if)
+         ut_get_test(replace_copy_if),
+         ut_get_test(lexicographical_compare)
 );
 
 void run_algorithm_tests()
