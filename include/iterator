@@ -178,6 +178,48 @@ namespace std
         iterator_type _iter;
     };
 
+    template <typename Iterator1, typename Iterator2>
+    inline constexpr bool operator==(const reverse_iterator<Iterator1> &lhs, const reverse_iterator<Iterator2> &rhs)
+    {
+        return lhs.base() == rhs.base();
+    }
+
+    template <typename Iterator1, typename Iterator2>
+    inline constexpr bool operator!=(const reverse_iterator<Iterator1> &lhs, const reverse_iterator<Iterator2> &rhs)
+    {
+        return lhs.base() != rhs.base();
+    }
+
+    template <typename Iterator1, typename Iterator2>
+    inline constexpr bool operator<(const reverse_iterator<Iterator1> &lhs, const reverse_iterator<Iterator2> &rhs)
+    {
+        return lhs.base() < rhs.base();
+    }
+
+    template <typename Iterator1, typename Iterator2>
+    inline constexpr bool operator<=(const reverse_iterator<Iterator1> &lhs, const reverse_iterator<Iterator2> &rhs)
+    {
+        return lhs.base() <= rhs.base();
+    }
+
+    template <typename Iterator1, typename Iterator2>
+    inline constexpr bool operator>(const reverse_iterator<Iterator1> &lhs, const reverse_iterator<Iterator2> &rhs)
+    {
+        return lhs.base() > rhs.base();
+    }
+
+    template <typename Iterator1, typename Iterator2>
+    inline constexpr bool operator>=(const reverse_iterator<Iterator1> &lhs, const reverse_iterator<Iterator2> &rhs)
+    {
+        return lhs.base() >= rhs.base();
+    }
+
+    template <typename Iterator>
+    inline constexpr std::reverse_iterator<Iterator> make_reverse_iterator(Iterator it)
+    {
+        return reverse_iterator<Iterator>(it);
+    }
+
     template <typename Iterator>
     class move_iterator
     {
@@ -294,25 +336,25 @@ namespace std
     }
 
     template <typename T>
-    constexpr auto begin(T &t) -> decltype(t.begin())
+    inline constexpr auto begin(T &t) -> decltype(t.begin())
     {
         return t.begin();
     }
 
     template <typename T>
-    constexpr auto begin(const T &t) -> decltype(t.begin())
+    inline constexpr auto begin(const T &t) -> decltype(t.begin())
     {
         return t.begin();
     }
 
     template <typename T>
-    constexpr auto end(T &t) -> decltype(t.end())
+    inline constexpr auto end(T &t) -> decltype(t.end())
     {
         return t.end();
     }
 
     template <typename T>
-    constexpr auto end(const T &t) -> decltype(t.end())
+    inline constexpr auto end(const T &t) -> decltype(t.end())
     {
         return t.end();
     }
@@ -327,6 +369,54 @@ namespace std
     inline constexpr auto cend(const T &t) noexcept(noexcept(std::end(t))) -> decltype(std::end(t))
     {
         return std::end(t);
+    }
+
+    template <typename T, std::size_t Size>
+    inline constexpr std::reverse_iterator<T *> rbegin(T (&arr)[Size]) noexcept
+    {
+        return std::make_reverse_iterator(std::end(arr));
+    }
+
+    template <typename T, std::size_t Size>
+    inline constexpr std::reverse_iterator<T *> rend(T (&arr)[Size]) noexcept
+    {
+        return std::make_reverse_iterator(std::begin(arr));
+    }
+
+    template <typename T>
+    inline constexpr auto rbegin(T &t) -> decltype(t.begin())
+    {
+        return t.rbegin();
+    }
+
+    template <typename T>
+    inline constexpr auto rbegin(const T &t) -> decltype(t.begin())
+    {
+        return t.rbegin();
+    }
+
+    template <typename T>
+    inline constexpr auto rend(T &t) -> decltype(t.end())
+    {
+        return t.rend();
+    }
+
+    template <typename T>
+    inline constexpr auto rend(const T &t) -> decltype(t.end())
+    {
+        return t.rend();
+    }
+
+    template <typename T>
+    inline constexpr auto crbegin(const T &t) noexcept(noexcept(std::begin(t))) -> decltype(std::begin(t))
+    {
+        return std::rbegin(t);
+    }
+
+    template <typename T>
+    inline constexpr auto crend(const T &t) noexcept(noexcept(std::end(t))) -> decltype(std::end(t))
+    {
+        return std::rend(t);
     }
 }
 
