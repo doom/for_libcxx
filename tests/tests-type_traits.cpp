@@ -645,6 +645,22 @@ ut_test(underlying_type)
     static_assert(std::is_same_v<std::underlying_type_t<test>, char>);
 }
 
+ut_test(alignment_of)
+{
+    static_assert(std::alignment_of_v<int> == alignof(int));
+    static_assert(std::alignment_of_v<char> == alignof(char));
+}
+
+ut_test(extent)
+{
+    static_assert(std::extent_v<int[2]> == 2);
+    static_assert(std::extent_v<int[2][3]> == 2);
+    static_assert(std::extent_v<int[2], 1> == 0);
+    static_assert(std::extent_v<int[2][3], 1> == 3);
+    static_assert(std::extent_v<int[]> == 0);
+    static_assert(std::extent_v<int> == 0);
+}
+
 ut_group(type_traits,
          ut_get_test(integral_constant),
          ut_get_test(bool_constant),
@@ -682,7 +698,9 @@ ut_group(type_traits,
          ut_get_test(invoke_result),
          ut_get_test(is_invocable),
          ut_get_test(is_enum),
-         ut_get_test(underlying_type)
+         ut_get_test(underlying_type),
+         ut_get_test(alignment_of),
+         ut_get_test(extent)
 );
 
 void run_type_traits_tests()
