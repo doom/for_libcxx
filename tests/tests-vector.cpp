@@ -8,12 +8,10 @@
 namespace
 {
     template <typename T>
-    struct bump_allocator
+    struct buffer_resource
     {
         using value_type = T;
         using pointer = value_type *;
-
-        using propagate_on_container_move_assignment = std::true_type;
 
         pointer allocate(size_t n)
         {
@@ -23,12 +21,50 @@ namespace
             return reinterpret_cast<pointer>(ret);
         }
 
-        void deallocate(pointer, size_t)
+        void deallocate(pointer p, size_t size)
         {
+            if (!(std::begin(buffer) <= (char *)p && (char *)(p + size) <= buffer + index)) {
+                ut_printf("Invalid free\n");
+            }
+            if ((char *)(p + size) == buffer + index) {
+                index -= size * sizeof(T);
+            }
         }
 
         alignas(T) char buffer[4096];
         size_t index{0};
+    };
+
+    template <typename T>
+    static buffer_resource<T> buf_res;
+
+    template <typename T>
+    struct bump_allocator
+    {
+        using value_type = T;
+        using pointer = value_type *;
+
+        using propagate_on_container_move_assignment = std::true_type;
+
+        pointer allocate(size_t n)
+        {
+            return buf_res<T>.allocate(n);
+        }
+
+        void deallocate(pointer p, size_t size)
+        {
+            buf_res<T>.deallocate(p, size);
+        }
+
+        friend bool operator==(const bump_allocator &lhs, const bump_allocator &rhs)
+        {
+            return &lhs == &rhs;
+        }
+
+        friend bool operator!=(const bump_allocator &lhs, const bump_allocator &rhs)
+        {
+            return !(rhs == lhs);
+        }
     };
 }
 
@@ -192,6 +228,23 @@ ut_test(move_constructor)
     }
 }
 
+ut_test(move_constructor_with_allocator)
+{
+    std::vector<int, bump_allocator<int>> vec;
+
+    for (int i = 0; i < 50; ++i) {
+        vec.emplace_back(i);
+    }
+
+    std::vector<int, bump_allocator<int>> vec2(std::move(vec), bump_allocator<int>{});
+    // vec does not have to be empty
+    ut_assert_ne(vec.data(), vec2.data());
+
+    for (int i = 0; i < 50; ++i) {
+        ut_assert_eq(vec2[i], i);
+    }
+}
+
 ut_test(move_assignment)
 {
     std::vector<int, bump_allocator<int>> vec;
@@ -258,6 +311,17 @@ ut_test(insert_one)
     }
 }
 
+ut_test(initializer_list)
+{
+    std::vector<int, bump_allocator<int>> vec{0, 1, 2, 3, 4};
+
+    ut_assert_eq(vec.size(), 5);
+    ut_assert_ge(vec.capacity(), 5);
+    for (int i = 0; i < 5; ++i) {
+        ut_assert_eq(vec[i], i);
+    }
+}
+
 ut_group(vector,
          ut_get_test(basic),
          ut_get_test(multiple_reallocation),
@@ -267,9 +331,11 @@ ut_group(vector,
          ut_get_test(construct_with_default),
          ut_get_test(copy_constructor),
          ut_get_test(move_constructor),
+         ut_get_test(move_constructor_with_allocator),
          ut_get_test(move_assignment),
          ut_get_test(copy_assignment),
-         ut_get_test(insert_one)
+         ut_get_test(insert_one),
+         ut_get_test(initializer_list)
 );
 
 void run_vector_tests()

@@ -6,6 +6,7 @@
 #define FOR_LIBCXX_VECTOR
 
 #include <details/config.hpp>
+#include <details/iterator_concept_checks.hpp>
 #include <cstddef>
 #include <type_traits>
 #include <memory>
@@ -13,6 +14,7 @@
 #include <iterator>
 #include <algorithm>
 #include <stdexcept>
+#include <initializer_list>
 
 namespace std
 {
@@ -132,32 +134,32 @@ namespace std
             return _allocator();
         }
 
-        reference front() noexcept
+        reference front()
         {
             return *_buffer;
         }
 
-        const_reference front() const noexcept
+        const_reference front() const
         {
             return *_buffer;
         }
 
-        reference back() noexcept
+        reference back()
         {
             return *(_buffer + _size - 1);
         }
 
-        const_reference back() const noexcept
+        const_reference back() const
         {
             return *(_buffer + _size - 1);
         }
 
-        reference operator[](size_type pos) noexcept
+        reference operator[](size_type pos)
         {
             return _buffer[pos];
         }
 
-        const_reference operator[](size_type pos) const noexcept
+        const_reference operator[](size_type pos) const
         {
             return _buffer[pos];
         }
@@ -194,7 +196,7 @@ namespace std
             pointer new_buffer = allocator_traits::allocate(_allocator(), to);
 
             if (_size > 0) {
-                std::details::uninitialized_move_a(begin(), end(), new_buffer, _allocator());
+                details::uninitialized_move_a(begin(), end(), new_buffer, _allocator());
                 _destroy_elements(begin(), end());
                 allocator_traits::deallocate(_allocator(), _buffer, _capacity);
             }
@@ -228,7 +230,7 @@ namespace std
             _buffer(allocator_traits::allocate(_allocator(), count)),
             _size(count), _capacity(count)
         {
-            std::details::uninitialized_fill_a(begin(), end(), value, _allocator());
+            details::uninitialized_fill_a(begin(), end(), value, _allocator());
         }
 
         explicit vector(size_type count, const Allocator &alloc = Allocator()) :
@@ -236,7 +238,31 @@ namespace std
             _buffer(allocator_traits::allocate(_allocator(), count)),
             _size(count), _capacity(count)
         {
-            std::details::uninitialized_default_construct_a(begin(), end(), _allocator());
+            details::uninitialized_default_construct_a(begin(), end(), _allocator());
+        }
+
+        template <typename InputIt, typename = std::enable_if_t<details::is_input_iterator_v<InputIt>>>
+        vector(InputIt begin, InputIt end, const Allocator &alloc = Allocator()) : vector(alloc)
+        {
+            if constexpr (details::is_random_access_iterator_v<InputIt>) {
+                reserve(end - begin);
+            }
+            while (begin != end) {
+                push_back(*begin);
+                ++begin;
+            }
+        }
+
+        vector(vector &&other, const Allocator &alloc) : vector(alloc)
+        {
+            if (alloc == other.get_allocator()) {
+                std::swap(_buffer, other._buffer);
+                std::swap(_capacity, other._capacity);
+                std::swap(_size, other._size);
+            } else {
+                _grow_to(other.size());
+                details::uninitialized_move_a(other.begin(), other.end(), begin(), _allocator());
+            }
         }
 
         vector(vector &&other) noexcept : allocator_type(std::move(other._allocator())),
@@ -253,14 +279,16 @@ namespace std
             _capacity(other._size),
             _size(other._size)
         {
-            std::details::uninitialized_copy_a(other.begin(), other.end(),
-                                               begin(),
-                                               _allocator());
+            details::uninitialized_copy_a(other.begin(), other.end(), begin(), _allocator());
         }
 
         vector(const vector &other) noexcept :
             vector(other,
                    std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator()))
+        {
+        }
+
+        vector(std::initializer_list<T> init, const Allocator &alloc = Allocator()) : vector(init.begin(), init.end(), alloc)
         {
         }
 

@@ -18,6 +18,7 @@ set(LIBCXX_SOURCES
         include/details/constexpr_cstring.hpp
         include/details/char_traits.hpp
         include/details/detectors.hpp
+        include/details/iterator_concept_checks.hpp
         include/details/more_type_traits.hpp
         include/details/move_and_forward.hpp
         include/details/unique_ptr.hpp
