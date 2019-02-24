@@ -24,6 +24,7 @@ set(LIBCXX_SOURCES
         include/details/unique_ptr.hpp
         include/details/addressof.hpp
         include/details/swap.hpp
+        include/array
         include/cstdint
         include/cstddef
         include/climits
@@ -72,6 +73,7 @@ add_executable(for_libcxx-tests
         tests/tests-vector.cpp
         tests/tests-tuple.cpp
         tests/tests-numeric.cpp
+        tests/tests-array.cpp
         )
 
 set_target_properties(for_libcxx-tests PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")

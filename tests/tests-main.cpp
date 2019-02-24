@@ -16,6 +16,7 @@ void run_memory_tests();
 void run_vector_tests();
 void run_tuple_tests();
 void run_numeric_tests();
+void run_array_tests();
 
 int main()
 {
@@ -33,4 +34,5 @@ int main()
     run_vector_tests();
     run_tuple_tests();
     run_numeric_tests();
+    run_array_tests();
 }

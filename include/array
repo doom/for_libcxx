@@ -1,0 +1,252 @@
+/*
+** Created by doom on 22/02/19.
+*/
+
+#ifndef FOR_LIBCXX_ARRAY
+#define FOR_LIBCXX_ARRAY
+
+#include <details/config.hpp>
+#include <algorithm>
+#include <cstddef>
+#include <stdexcept>
+#include <iterator>
+
+namespace std
+{
+    template <typename T, std::size_t N>
+    struct array
+    {
+        using value_type = T;
+        using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
+        using reference = value_type &;
+        using const_reference = const value_type &;
+        using pointer = value_type *;
+        using const_pointer = const value_type *;
+        using iterator = pointer;
+        using const_iterator = const_pointer;
+        using reverse_iterator = std::reverse_iterator<iterator>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+        value_type _data[N];
+
+        constexpr size_type size() const noexcept
+        {
+            return N;
+        }
+
+        constexpr bool empty() const noexcept
+        {
+            return size() == 0;
+        }
+
+        constexpr size_type max_size() const noexcept
+        {
+            return size();
+        }
+
+        constexpr pointer data() noexcept
+        {
+            return _data;
+        }
+
+        constexpr const_pointer data() const noexcept
+        {
+            return _data;
+        }
+
+        constexpr iterator begin() noexcept
+        {
+            return data();
+        }
+
+        constexpr const_iterator begin() const noexcept
+        {
+            return data();
+        }
+
+        constexpr const_iterator cbegin() const noexcept
+        {
+            return begin();
+        }
+
+        constexpr iterator end() noexcept
+        {
+            return data() + size();
+        }
+
+        constexpr const_iterator end() const noexcept
+        {
+            return data() + size();
+        }
+
+        constexpr const_iterator cend() const noexcept
+        {
+            return end();
+        }
+
+        constexpr reverse_iterator rbegin() noexcept
+        {
+            return std::make_reverse_iterator(end());
+        }
+
+        constexpr const_reverse_iterator rbegin() const noexcept
+        {
+            return std::make_reverse_iterator(end());
+        }
+
+        constexpr const_reverse_iterator crbegin() const noexcept
+        {
+            return std::make_reverse_iterator(cend());
+        }
+
+        constexpr reverse_iterator rend() noexcept
+        {
+            return std::make_reverse_iterator(begin());
+        }
+
+        constexpr const_reverse_iterator rend() const noexcept
+        {
+            return std::make_reverse_iterator(begin());
+        }
+
+        constexpr const_reverse_iterator crend() const noexcept
+        {
+            return std::make_reverse_iterator(cbegin());
+        }
+
+        constexpr reference at(size_type pos)
+        {
+            if (not pos < size()) {
+                FOR_LIBCXX_THROW(std::out_of_range);
+            }
+            return _data[pos];
+        }
+
+        constexpr const_reference at(size_type pos) const
+        {
+            if (not pos < size()) {
+                FOR_LIBCXX_THROW(std::out_of_range);
+            }
+            return _data[pos];
+        }
+
+        constexpr reference operator[](size_type pos)
+        {
+            return _data[pos];
+        }
+
+        constexpr const_reference operator[](size_type pos) const
+        {
+            return _data[pos];
+        }
+
+        constexpr reference front()
+        {
+            return *begin();
+        }
+
+        constexpr const_reference front() const
+        {
+            return *begin();
+        }
+
+        constexpr reference back()
+        {
+            auto it = end();
+            return *--it;
+        }
+
+        constexpr const_reference back() const
+        {
+            auto it = end();
+            return *--it;
+        }
+
+        constexpr void fill(const T &value)
+        {
+            std::fill(begin(), end(), value);
+        }
+
+        constexpr void swap(array &other) noexcept(noexcept(swap(std::declval<T &>(), std::declval<T &>())))
+        {
+            std::swap_ranges(begin(), end(), other.begin());
+        }
+    };
+
+    template <typename T, typename ...Ts>
+    array(T, Ts...) -> array<T, 1 + sizeof...(Ts)>;
+
+    //TODO: opt-out of overload resolution is T is not swappable
+    template <typename T, std::size_t N>
+    constexpr void swap(array<T, N> &arr1, array<T, N> &arr2) noexcept(noexcept(arr1.swap(arr2)))
+    {
+        arr1.swap(arr2);
+    }
+
+    template <typename T, std::size_t N>
+    inline constexpr bool operator==(const std::array<T, N> &arr1, const std::array<T, N> &arr2)
+    {
+        return std::equal(arr1.begin(), arr1.end(), arr2.begin());
+    }
+
+    template <typename T, std::size_t N>
+    inline constexpr bool operator!=(const std::array<T, N> &arr1, const std::array<T, N> &arr2)
+    {
+        return !(arr1 == arr2);
+    }
+
+    template <typename T, std::size_t N>
+    inline constexpr bool operator<(const std::array<T, N> &arr1, const std::array<T, N> &arr2)
+    {
+        return std::lexicographical_compare(arr1.begin(), arr1.end(), arr2.begin(), arr2.end());
+    }
+
+    template <typename T, std::size_t N>
+    inline constexpr bool operator<=(const std::array<T, N> &arr1, const std::array<T, N> &arr2)
+    {
+        return !(arr2 < arr1);
+    }
+
+    template <typename T, std::size_t N>
+    inline constexpr bool operator>(const std::array<T, N> &arr1, const std::array<T, N> &arr2)
+    {
+        return arr2 < arr1;
+    }
+
+    template <typename T, std::size_t N>
+    inline constexpr bool operator>=(const std::array<T, N> &arr1, const std::array<T, N> &arr2)
+    {
+        return !(arr1 < arr2);
+    }
+
+    template <size_t I, typename T, size_t N>
+    constexpr T &get(array<T, N> &arr) noexcept
+    {
+        static_assert(I < N, "std::get: array index out of range");
+        return arr[I];
+    }
+
+    template <size_t I, typename T, size_t N>
+    constexpr T &&get(array<T, N> &&arr) noexcept
+    {
+        static_assert(I < N, "std::get: array index out of range");
+        return std::move(arr[I]);
+    }
+
+    template <size_t I, typename T, size_t N>
+    constexpr const T &get(const array<T, N> &arr) noexcept
+    {
+        static_assert(I < N, "std::get: array index out of range");
+        return arr[I];
+    }
+
+    template <size_t I, typename T, size_t N>
+    constexpr const T &&get(const array<T, N> &&arr) noexcept
+    {
+        static_assert(I < N, "std::get: array index out of range");
+        return std::move(arr[I]);
+    }
+}
+
+#endif /* !FOR_LIBCXX_ARRAY */
