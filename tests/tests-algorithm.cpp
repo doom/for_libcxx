@@ -431,6 +431,26 @@ ut_test(lexicographical_compare)
     ut_assert_false(std::lexicographical_compare(std::begin(hello2), std::end(hello2), std::begin(hello), std::end(hello)));
 }
 
+ut_test(equal)
+{
+    const char hello[] = "hello world";
+    const char hello2[] = "hello";
+    const char hello3[] = "aloha";
+
+    ut_assert_false(std::equal(hello, hello + 11, hello2));
+    ut_assert(std::equal(hello2, hello2 + 5, hello));
+    ut_assert_false(std::equal(hello2, hello2 + 5, hello3));
+    ut_assert_false(std::equal(hello, hello + 11, hello3));
+    ut_assert(std::equal(hello, hello + 11, hello));
+
+    ut_assert_false(std::equal(hello, hello + 11, hello2, hello2 + 5));
+    ut_assert_false(std::equal(hello2, hello2 + 5, hello, hello + 11));
+    ut_assert(std::equal(hello2, hello2 + 5, hello, hello + 5));
+    ut_assert_false(std::equal(hello2, hello2 + 5, hello3, hello3 + 5));
+    ut_assert_false(std::equal(hello, hello + 11, hello3, hello3 + 5));
+    ut_assert(std::equal(hello, hello + 11, hello, hello + 11));
+}
+
 ut_group(algorithm,
          ut_get_test(min_element),
          ut_get_test(max_element),
@@ -455,7 +475,8 @@ ut_group(algorithm,
          ut_get_test(unique),
          ut_get_test(replace_if),
          ut_get_test(replace_copy_if),
-         ut_get_test(lexicographical_compare)
+         ut_get_test(lexicographical_compare),
+         ut_get_test(equal)
 );
 
 void run_algorithm_tests()
