@@ -451,6 +451,16 @@ ut_test(equal)
     ut_assert(std::equal(hello, hello + 11, hello, hello + 11));
 }
 
+ut_test(swap_ranges)
+{
+    char hello[] = "hello";
+    char aloha[] = "aloha";
+
+    std::swap_ranges(std::begin(hello), std::end(hello), std::begin(aloha));
+    ut_assert_streq(hello, "aloha");
+    ut_assert_streq(aloha, "hello");
+}
+
 ut_group(algorithm,
          ut_get_test(min_element),
          ut_get_test(max_element),
@@ -476,7 +486,8 @@ ut_group(algorithm,
          ut_get_test(replace_if),
          ut_get_test(replace_copy_if),
          ut_get_test(lexicographical_compare),
-         ut_get_test(equal)
+         ut_get_test(equal),
+         ut_get_test(swap_ranges)
 );
 
 void run_algorithm_tests()
