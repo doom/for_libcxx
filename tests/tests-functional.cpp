@@ -42,10 +42,24 @@ ut_test(less)
     static_assert(!lv(2, 2));
 }
 
+ut_test(equal_to)
+{
+    std::equal_to<int> eqi;
+    static_assert(!eqi(1, 2));
+    static_assert(!eqi(2, 1));
+    static_assert(eqi(2, 2));
+
+    std::equal_to<void> eqv;
+    static_assert(!eqv(1, 2));
+    static_assert(!eqv(2, 1));
+    static_assert(eqv(2, 2));
+}
+
 ut_group(functional,
          ut_get_test(reference_wrapper),
          ut_get_test(invoke),
-         ut_get_test(less)
+         ut_get_test(less),
+         ut_get_test(equal_to)
 );
 
 void run_functional_tests()
