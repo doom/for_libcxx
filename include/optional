@@ -6,14 +6,11 @@
 #define FOR_LIBCXX_OPTIONAL
 
 #include <details/config.hpp>
-#include <details/move_constructible.hpp>
-#include <details/copy_constructible.hpp>
-#include <details/move_assignable.hpp>
-#include <details/copy_assignable.hpp>
 #include <type_traits>
 #include <utility>
 #include <new>
 #include <exception>
+#include <details/ctor_and_assign_helpers.hpp>
 
 namespace std
 {
@@ -178,6 +175,8 @@ namespace std
         public:
             using optional_basic_helpers<T>::optional_basic_helpers;
 
+            constexpr optional_move_constructor_helpers() = default;
+
             optional_move_constructor_helpers(optional_move_constructor_helpers &&other)
             noexcept(std::is_nothrow_move_constructible_v<T>)
             {
@@ -190,7 +189,7 @@ namespace std
 
             optional_move_constructor_helpers(const optional_move_constructor_helpers &) = default;
 
-            optional_move_constructor_helpers &operator=(optional_move_constructor_helpers &&other) noexcept = default;
+            optional_move_constructor_helpers &operator=(optional_move_constructor_helpers &&other) = default;
 
             optional_move_constructor_helpers &operator=(const optional_move_constructor_helpers &) = default;
         };
@@ -210,7 +209,9 @@ namespace std
         public:
             using optional_move_constructor_helpers<T>::optional_move_constructor_helpers;
 
-            optional_copy_constructor_helpers(optional_copy_constructor_helpers &&) noexcept = default;
+            constexpr optional_copy_constructor_helpers() = default;
+
+            optional_copy_constructor_helpers(optional_copy_constructor_helpers &&) = default;
 
             optional_copy_constructor_helpers(const optional_copy_constructor_helpers &other)
             noexcept(std::is_nothrow_copy_constructible_v<T>)
@@ -222,7 +223,7 @@ namespace std
                 }
             }
 
-            optional_copy_constructor_helpers &operator=(optional_copy_constructor_helpers &&) noexcept = default;
+            optional_copy_constructor_helpers &operator=(optional_copy_constructor_helpers &&) = default;
 
             optional_copy_constructor_helpers &operator=(const optional_copy_constructor_helpers &other) = default;
         };
@@ -247,12 +248,16 @@ namespace std
         public:
             using optional_copy_constructor_helpers<T>::optional_copy_constructor_helpers;
 
-            optional_move_assignment_op_helpers(optional_move_assignment_op_helpers &&) noexcept = default;
+            constexpr optional_move_assignment_op_helpers() = default;
+
+            optional_move_assignment_op_helpers(optional_move_assignment_op_helpers &&) = default;
 
             optional_move_assignment_op_helpers(const optional_move_assignment_op_helpers &) = default;
 
             optional_move_assignment_op_helpers &operator=(optional_move_assignment_op_helpers &&other)
-            noexcept(std::is_nothrow_move_assignable_v<T>)
+            noexcept(std::is_trivially_destructible_v<T>
+                     && std::is_trivially_move_constructible_v<T>
+                     && std::is_trivially_move_assignable_v<T>)
             {
                 this->replace(std::move(other));
                 return *this;
@@ -281,14 +286,18 @@ namespace std
         public:
             using optional_move_assignment_op_helpers<T>::optional_move_assignment_op_helpers;
 
-            optional_copy_assignment_op_helpers(optional_copy_assignment_op_helpers &&) noexcept = default;
+            constexpr optional_copy_assignment_op_helpers() = default;
+
+            optional_copy_assignment_op_helpers(optional_copy_assignment_op_helpers &&) = default;
 
             optional_copy_assignment_op_helpers(const optional_copy_assignment_op_helpers &) = default;
 
-            optional_copy_assignment_op_helpers &operator=(optional_copy_assignment_op_helpers &&) noexcept = default;
+            optional_copy_assignment_op_helpers &operator=(optional_copy_assignment_op_helpers &&) = default;
 
             optional_copy_assignment_op_helpers &operator=(const optional_copy_assignment_op_helpers &other)
-            noexcept(std::is_nothrow_copy_assignable_v<T>)
+            noexcept(std::is_trivially_copy_assignable_v<T>
+                     && std::is_trivially_copy_constructible_v<T>
+                     && std::is_trivially_copy_assignable_v<T>)
             {
                 this->replace(other);
                 return *this;
@@ -303,30 +312,35 @@ namespace std
             using optional_move_assignment_op_helpers<T>::optional_move_assignment_op_helpers;
         };
 
+        /** Base class to disable operations that are unsupported by the contained type */
         template <typename T>
-        class optional_base : public optional_copy_assignment_op_helpers<T>
+        class optional_base : public details::allow_copy_and_move_if<
+            optional_copy_assignment_op_helpers<T>,
+            std::is_copy_constructible_v<T>,
+            std::is_move_constructible_v<T>,
+            std::is_copy_constructible_v<T> && std::is_copy_assignable_v<T>,
+            std::is_move_assignable_v<T> && std::is_move_constructible_v<T>
+        >
         {
         public:
-            using optional_copy_assignment_op_helpers<T>::optional_copy_assignment_op_helpers;
-        };
+            using details::allow_copy_and_move_if<
+                optional_copy_assignment_op_helpers<T>,
+                std::is_copy_constructible_v<T>,
+                std::is_move_constructible_v<T>,
+                std::is_copy_constructible_v<T> && std::is_copy_assignable_v<T>,
+                std::is_move_assignable_v<T> && std::is_move_constructible_v<T>
+            >::allow_copy_and_move_if;
 
-        template <typename T>
-        class unsupported_operator_deleter :
-            public details::move_constructible_if<std::is_move_constructible_v<T>>,
-            public details::copy_constructible_if<std::is_copy_constructible_v<T>>,
-            public details::move_assignable_if<std::is_move_assignable_v<T>>,
-            public details::copy_assignable_if<std::is_copy_assignable_v<T>>
-        {
+            constexpr optional_base() = default;
         };
     }
 
     template <typename T>
-    class optional : private details::optional_base<T>, private details::unsupported_operator_deleter<T>
+    class optional : private details::optional_base<T>
     {
     public:
         using value_type = T;
         using details::optional_base<T>::optional_base;
-        using details::unsupported_operator_deleter<T>::unsupported_operator_deleter;
 
         constexpr optional() noexcept = default;
 
@@ -346,15 +360,9 @@ namespace std
 
         constexpr optional(const optional &other) noexcept(std::is_nothrow_copy_constructible_v<T>) = default;
 
-        constexpr optional &operator=(optional &&other)
-        noexcept(std::is_nothrow_destructible_v<T>
-                 && std::is_nothrow_move_constructible_v<T>
-                 && std::is_nothrow_move_assignable_v<T>) = default;
+        constexpr optional &operator=(optional &&other) = default;
 
-        constexpr optional &operator=(const optional &other)
-        noexcept(std::is_nothrow_destructible_v<T>
-                 && std::is_nothrow_copy_constructible_v<T>
-                 && std::is_nothrow_copy_assignable_v<T>) = default;
+        constexpr optional &operator=(const optional &other) = default;
 
         template <typename ...Args>
         constexpr void emplace(Args &&...args)

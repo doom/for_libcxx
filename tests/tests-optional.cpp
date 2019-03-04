@@ -16,8 +16,13 @@ namespace
     class not_trivially_destructible
     {
     public:
+        not_trivially_destructible &operator=(const not_trivially_destructible &) = default;
+
+        not_trivially_destructible &operator=(not_trivially_destructible &&) = default;
+
         ~not_trivially_destructible()
         {
+
         }
     };
 

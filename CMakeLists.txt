@@ -11,10 +11,7 @@ add_subdirectory(lib/meta)
 
 set(LIBCXX_SOURCES
         include/details/config.hpp
-        include/details/move_constructible.hpp
-        include/details/copy_constructible.hpp
-        include/details/move_assignable.hpp
-        include/details/copy_assignable.hpp
+        include/details/ctor_and_assign_helpers.hpp
         include/details/constexpr_cstring.hpp
         include/details/char_traits.hpp
         include/details/detectors.hpp
@@ -76,6 +73,6 @@ add_executable(for_libcxx-tests
         tests/tests-array.cpp
         )
 
-set_target_properties(for_libcxx-tests PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
+set_target_properties(for_libcxx-tests PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS}")
 
 target_link_libraries(for_libcxx-tests for_libcxx-static doom::meta ut)

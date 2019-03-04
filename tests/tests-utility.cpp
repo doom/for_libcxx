@@ -5,7 +5,6 @@
 #include <ut_config.h>
 #include <utility>
 #include <type_traits>
-#include <details/copy_constructible.hpp>
 
 ut_test(move)
 {
@@ -52,6 +51,11 @@ namespace
     {
         explicit explicitly_default_constructible() = default;
     };
+
+    struct not_copy_constructible
+    {
+        not_copy_constructible(const not_copy_constructible &) = delete;
+    };
 }
 
 ut_test(details)
@@ -69,7 +73,7 @@ using float_and_float_taker = void (*)(const std::pair<float, float> &);
 using int_and_edc = std::pair<int, explicitly_default_constructible>;
 using int_and_edc_taker = void (*)(int_and_edc);
 
-using int_and_ncc = std::pair<int, std::details::not_copy_constructible>;
+using int_and_ncc = std::pair<int, not_copy_constructible>;
 
 #define GENERATE_CAN_TAKE_CHECKER(name, ...)                                                                \
 template <typename FuncT, typename T = void>                                                                \
