@@ -6,11 +6,11 @@
 #define FOR_LIBCXX_OPTIONAL
 
 #include <details/config.hpp>
+#include <meta/utils/allow_copy_move_operations.hpp>
 #include <type_traits>
 #include <utility>
 #include <new>
 #include <exception>
-#include <details/ctor_and_assign_helpers.hpp>
 
 namespace std
 {
@@ -314,7 +314,7 @@ namespace std
 
         /** Base class to disable operations that are unsupported by the contained type */
         template <typename T>
-        class optional_base : public details::allow_copy_and_move_if<
+        class optional_base : public meta::allow_copy_and_move_if<
             optional_copy_assignment_op_helpers<T>,
             std::is_copy_constructible_v<T>,
             std::is_move_constructible_v<T>,
@@ -323,7 +323,7 @@ namespace std
         >
         {
         public:
-            using details::allow_copy_and_move_if<
+            using meta::allow_copy_and_move_if<
                 optional_copy_assignment_op_helpers<T>,
                 std::is_copy_constructible_v<T>,
                 std::is_move_constructible_v<T>,

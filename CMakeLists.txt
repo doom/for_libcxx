@@ -11,7 +11,6 @@ add_subdirectory(lib/meta)
 
 set(LIBCXX_SOURCES
         include/details/config.hpp
-        include/details/ctor_and_assign_helpers.hpp
         include/details/constexpr_cstring.hpp
         include/details/char_traits.hpp
         include/details/detectors.hpp
